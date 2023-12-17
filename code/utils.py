@@ -27,3 +27,6 @@ logger.setLevel(logging.INFO)
 console_handler = logging.StreamHandler()
 formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]')
 console_handler.setFormatter(formatter)
+
+def json2string(_json):
+    return json.dumps(_json, indent=4) 

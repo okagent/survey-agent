@@ -1,7 +1,9 @@
 
 from paper_func import *
 from llm_tools import *
+from utils import logger, json2string
 
+uid = 'test_user' 
 
 def merge_chunk_responses(responses, question):    
     #merge all the chunk answers if needed
@@ -26,16 +28,16 @@ def merge_chunk_responses(responses, question):
         # return merged_response
         pass
 
-def query_area_papers(paper_list_name, question):
+def query_area_papers(paper_list_name: str, question: str) -> str:
     """
-    Queries a large collection of papers to find an answer to a specific query.
+    Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
 
     Args:
-    paper_list_name (str): The name of the paper collection.
-    query (str): The query to be queried.
+        paper_list_name (str): The name of the paper collection.
+        query (str): The query to be answered.
 
     Returns:
-    list: A list of dictionaries containing the answer, the source paragraph, and the source paper.
+        str: A string representing a list of dictionaries containing the answer, the source paragraph, and the source paper.
     """
 
     paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
@@ -44,7 +46,7 @@ def query_area_papers(paper_list_name, question):
     
     collection_papers = _get_collection_papers(paper_list_name, uid)
 
-    paper_contents = [ {'content':_get_paper_content(paper_name, 'short'), 'source': paper_name} for paper_name in collection_papers]
+    paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in collection_papers]
     
     # ....
 
@@ -56,7 +58,7 @@ def query_area_papers(paper_list_name, question):
     # chunk the large collection of papers into chunks
     chunk_list=[]
     for p in paper_list:
-        content = get_paper_content(p ,mode="short")
+        content = _get_paper_content(p ,mode="short")
         chunks = get_chunks(content)
         for c in chunks:
             chunk_list.append((p,c))
@@ -91,14 +93,14 @@ def query_area_papers(paper_list_name, question):
 
 def query_individual_papers(paper_list_name, query, uid):
     """
-    Queries a small collection of papers to find an answer to a specific query.
+    Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 
     Args:
-    paper_list_name (str): The name of the paper collection.
-    query (str): The query to be queried.
+        paper_list_name (str): The name of the paper collection.
+        query (str): The query to be queried.
 
     Returns:
-    list: A list of tuples containing the answer, the source paragraph, and the source paper.
+        str: A string representing a list of tuples containing the answer, the source paragraph, and the source paper.
     """
 
     paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
@@ -107,7 +109,7 @@ def query_individual_papers(paper_list_name, query, uid):
     
     collection_papers = _get_collection_papers(paper_list_name, uid)
 
-    paper_contents = [ {'content':_get_paper_content(paper_name, 'short'), 'source': paper_name} for paper_name in collection_papers]
+    paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in collection_papers]
     
     # ....
 
@@ -120,7 +122,7 @@ def query_individual_papers(paper_list_name, query, uid):
     # chunk the large collection of papers into chunks
     chunk_list=[]
     for p in paper_list:
-        content = get_paper_content(p ,mode="short")
+        content = _get_paper_content(p ,mode="short")
         chunks = get_chunks(content)
         for c in chunks:
             chunk_list.append((p,c))
@@ -166,7 +168,7 @@ if __name__ == '__main__':
     query_paper = f.read()
     answer_with_source=[]
     for p in paper_list:
-        paper_content = get_paper_content(p, mode="full")
+        paper_content = _get_paper_content(p, mode="full")
         prompt = query_paper.format(content=paper_content, question=question)
         res = gpt_4_predict(prompt)
         leave = {

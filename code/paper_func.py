@@ -1,12 +1,15 @@
 import difflib
 import pdb 
 import random
-from utils import logger
+from utils import logger, json2string
+from typing import List
 
 PAPER_NOT_FOUND_INFO = "Sorry, we cannot find the paper you are looking for."
 COLLECTION_NOT_FOUND_INFO = "Sorry, we cannot find the paper collection you are looking for."
 RETRIEVE_NOTHING_INFO = "Sorry, we retrieve no relevant paper for your query."
 ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
+
+uid = 'test_user' 
 
 # load paper_corpus.json
 import json
@@ -37,8 +40,19 @@ def _sync_paper_collections(paper_collections=None):
 # load paper collections data
 paper_collections = _sync_paper_collections()
 
-def get_papers_and_define_collections(paper_titles, paper_collection_name, uid):
-    # Input a list of papers, match with papers in our database, and define as a paper collection
+
+def get_papers_and_define_collections(paper_titles: List[str], paper_collection_name: str) -> str:
+    """
+    This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name.
+
+    Args:
+        paper_titles (List[str]): A list of paper titles to be searched in the database.
+        paper_collection_name (str): The name to be assigned to the newly defined collection of papers.
+
+    Returns:
+        str: A string of JSON format representing information of the found papers, including their title, authors, year and url.
+    """
+
     found_papers = _get_papers_by_name(paper_titles)
     _define_paper_collection(found_papers, paper_collection_name, uid)
     return _display_papers(found_papers, user_inputs=paper_titles)
@@ -48,13 +62,29 @@ def _get_paper_content(paper_name, mode):
     if paper_name in paper_corpus.keys():
         if mode == 'full':
             return paper_corpus[paper_name]['full_text'] 
-        else: # == 'short':
+        else: # == 'abstract':
             return paper_corpus[paper_name]['abstract'] 
     else:
         return PAPER_NOT_FOUND_INFO
 
-def get_paper_content(paper_name, mode):
-    return _get_paper_content(paper_name, mode)
+def get_paper_content(paper_name: str, mode: str) -> str:
+    """
+    Retrieve the content of a paper. Set 'mode' as 'full' for the full paper, or 'abstract' for the abstract.  
+
+    Args:
+        paper_name (str): The name of the paper.
+        mode (str): The mode of retrieval - 'full' for the complete text of the paper, 
+                    or 'abstract' for the paper's abstract.
+
+    Returns:
+        str: If the paper is found, returns its full text or abstract based on the mode. 
+             If not found, returns information indicating the paper was not found.
+    """
+    paper_name = _get_papers_by_name([paper_name])[0]
+    if paper_name:
+        return _get_paper_content(paper_name, mode)
+    else:
+        return PAPER_NOT_FOUND_INFO
 
 def _get_paper_metadata(paper_name):
     """Get metadata of a paper based on its exact name."""
@@ -63,8 +93,24 @@ def _get_paper_metadata(paper_name):
     else:
         return PAPER_NOT_FOUND_INFO
 
-def get_paper_metadata(paper_name):
-    return _get_paper_metadata(paper_name)
+def get_paper_metadata(paper_name: str) -> str:
+    """
+    Retrieve the metadata of a paper, including its title, authors, year and url.
+
+    Args:
+        paper_name (str): The name of the paper.
+
+    Returns:
+        str: If the paper is found, returns its metadata. 
+             If not found, returns information indicating the paper was not found.
+    """
+
+    paper_name = _get_papers_by_name([paper_name])[0]
+    if paper_name:
+        return _get_paper_metadata(paper_name)
+    else:
+        return PAPER_NOT_FOUND_INFO 
+    
     
 def _get_papers_by_name(paper_titles):
     """Find corresponding papers based on a list of fuzzy paper names."""
@@ -99,7 +145,7 @@ def _display_papers(paper_titles, user_inputs=None):
         for paper_name in paper_titles:
             paper_info.append(_get_paper_metadata(paper_name))
             paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
-    return json.dumps(paper_info, indent=4) 
+    return json2string(paper_info, indent=4) 
 
 def _define_paper_collection(found_papers, paper_collection_name, uid):
     """Define a paper list based on a list of exact paper names."""
@@ -135,15 +181,42 @@ def _get_collection_papers(collection_name, uid):
     paper_titles = paper_collections[uid][collection_name]
     return paper_titles
 
-def get_papercollection_by_name(collection_name, uid):
+def get_papercollection_by_name(collection_name: str) -> str:
+    """
+    Retrieves a specified paper collection by its name, along with some displayed papers from the collection.
+
+    Args:
+        collection_name (str): The name of the paper collection.
+
+    Returns:
+        str: If the collection is found, returns a string containing the collection's name 
+             and information of some papers from the collection for display. 
+             If the collection is not found, returns a string with information 
+             indicating the collection was not found.
+    """
+
     paper_collection_name = _get_papercollection_by_name(collection_name, uid)
     if paper_collection_name == COLLECTION_NOT_FOUND_INFO:
         return COLLECTION_NOT_FOUND_INFO
     else:
         collection_papers = _get_collection_papers(paper_collection_name, uid)[:3]
-        return {'Collection': paper_collection_name, 'Papers': _display_papers(collection_papers)}
+        return json2string({'Collection': paper_collection_name, 'Papers': _display_papers(collection_papers)})
 
-def update_paper_collection(target_collection_name, source_collection_name, paper_indexes, action, uid):
+def update_paper_collection(target_collection_name: str, source_collection_name: str, paper_indexes: str, action: str) -> bool:
+    """
+    Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (The format should be comma-separated, with ranges indicated by a dash, e.g., "1, 3-5") from the source collection.
+
+    Args:
+        target_collection_name (str): The name of the target collection to be updated.
+        source_collection_name (str): The name of the source collection where papers will be taken from.
+        paper_indexes (str): A string representing the indices of papers in the source collection to be used in the action. 
+                             The format should be comma-separated, with ranges indicated by a dash (e.g., "1,3-5").
+        action (str): The action to perform - either "add" to add papers to the target collection or "del" to delete them.
+
+    Returns:
+        bool: True if the update operation was successful, False otherwise.
+    """
+
     _target_collection_name = _get_papercollection_by_name(target_collection_name, uid)
     if _target_collection_name:
         target_collection_name = _target_collection_name 
@@ -204,26 +277,43 @@ for title, p in paper_corpus.items():
 
 retriever = BM25Retriever.from_documents(paper_docs)
 
-def retrieve_papers(query):
+def _retrieve_papers(query):
     result = retriever.get_relevant_documents(query)
     if len(result) > 0:
         return result[0]
     else:
-        raise None
+        return None
+    
+def retrieve_papers(query: str) -> str:
+    """
+    Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. 
+
+    Args:
+        query (str): The search query used to find the most relevant paper.
+
+    Returns:
+        str: The relevant paper and content. 
+    """
+    result = _retrieve_papers(query)
+    if result:
+        res = f'Paper: {result.metadata["title"]}\nContent: {result.page_content}'
+        return res
+    else:
+        return RETRIEVE_NOTHING_INFO
 
 
 if __name__ == '__main__':
-    uid = 'test_user' 
 
+    print('retrieve_papers: ', retrieve_papers('''what is Numerical Question Answering?''')[:100])
+    pdb.set_trace()
     
     print('get_papers_and_define_collections: ', get_papers_and_define_collections(paper_titles=["Semantic Relation Classification via Bidirectional LSTM Networks with Entity-aware Attention using", 'Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP', 'Does Role-Playing Chatbots Capture the Character Personalities? Assessing Personality Traits for Role-Playing'], paper_collection_name='Paper Collection 123',uid=uid))
     
 
     print('get_papercollection_by_name: ', get_papercollection_by_name("Paper Collection ", uid=uid))
     
-    print('retrieve_papers: ', retrieve_papers('''what is Numerical Question Answering?''').page_content[:100])
     
-    print('_get_paper_content: ', _get_paper_content('Towards Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP Systems', mode='short'))
+    print('_get_paper_content: ', _get_paper_content('Towards Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP Systems', mode='abstract'))
 
     print('update_paper_collection ', update_paper_collection('123 asd Papers', 'Paper Collection 123', '1-2', 'del', uid))
     
