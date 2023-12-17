@@ -1,0 +1,9 @@
+Given the following chunk of content from the scientific article:
+{chunk}
+
+Answer the question with evidence, ensuring accuracy and relevance to the content provided.
+1. Begin with a direct answer to the question, followed by an evidence-supported explanation.
+2. Reference specific parts of the chunk using quotations or section numbers when necessary.
+3. Validate your response by checking it against the content of the chunk.
+
+Question: {question}
