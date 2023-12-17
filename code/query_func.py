@@ -37,9 +37,13 @@ def query_area_papers(paper_list_name, question):
     Returns:
     list: A list of dictionaries containing the answer, the source paragraph, and the source paper.
     """
-    # TODO: Implement the logic to query a large collection of papers
-    paper_collection = _get_papercollection_by_name(paper_list_name, uid)
-    collection_papers = _get_collection_papers(paper_collection, uid)
+
+    paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
+    if paper_list_name == COLLECTION_NOT_FOUND_INFO:
+        return COLLECTION_NOT_FOUND_INFO
+    
+    collection_papers = _get_collection_papers(paper_list_name, uid)
+
     paper_contents = [ {'content':_get_paper_content(paper_name, 'short'), 'source': paper_name} for paper_name in collection_papers]
     
     # ....
@@ -47,7 +51,69 @@ def query_area_papers(paper_list_name, question):
     # call _display_papers to display the reference information
     # reference_info = _display_papers(...)
 
+    paper_list = get_paperlist_by_name(paper_list_name)
+
+    # chunk the large collection of papers into chunks
+    chunk_list=[]
+    for p in paper_list:
+        content = get_paper_content(p ,mode="short")
+        chunks = get_chunks(content)
+        for c in chunks:
+            chunk_list.append((p,c))
+
+    #check for relevant chunks => paper name and paragraph content
+    f = open(f"../prompts/check_for_related.txt", "r")
+    check_for_related = f.read()
+    prompts=[]
+    for d in chunk_list:
+        prompts.append(check_for_related.format(title=d[0], content=d[1]))
+    res = small_model_predict(prompts)
+
+    #parse for references, answers
+    answer_and_source=[]
+    f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
+    query_chunk = f.read()
+    query_chunk_prompts=[]
+    for i,j in zip(res,chunk_list):
+        if "yes" in i.lower():
+            leave={}
+            leave['source_content'] = j[1]
+            leave['source_paper'] = j[0]
+            answer_and_source.append(leave)
+            query_chunk_prompts.append(query_chunk.format(chunk=j[1], question=question))
+    answers = small_model_predict(query_chunk_prompts)
+    for i,j in zip(answers, answer_and_source):
+        j['answer'] = i
+
+    #merge for final complete answer if needed
+
+    return answer_and_source
+
 def query_individual_papers(paper_list_name, query, uid):
+    """
+    Queries a small collection of papers to find an answer to a specific query.
+
+    Args:
+    paper_list_name (str): The name of the paper collection.
+    query (str): The query to be queried.
+
+    Returns:
+    list: A list of tuples containing the answer, the source paragraph, and the source paper.
+    """
+
+    paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
+    if paper_list_name == COLLECTION_NOT_FOUND_INFO:
+        return COLLECTION_NOT_FOUND_INFO
+    
+    collection_papers = _get_collection_papers(paper_list_name, uid)
+
+    paper_contents = [ {'content':_get_paper_content(paper_name, 'short'), 'source': paper_name} for paper_name in collection_papers]
+    
+    # ....
+
+    # call _display_papers to display the reference information
+    # reference_info = _display_papers(...) 
+
     # Assume we can get a list of paper names
     paper_list = get_paperlist_by_name(paper_list_name)
     
@@ -87,27 +153,7 @@ def query_individual_papers(paper_list_name, query, uid):
     
     return answer_and_source
     
-    
-            
 
-    """
-    Queries a small collection of papers to find an answer to a specific query.
-
-    Args:
-    paper_list_name (str): The name of the paper collection.
-    query (str): The query to be queried.
-
-    Returns:
-    list: A list of tuples containing the answer, the source paragraph, and the source paper.
-    """
-    # TODO: Implement the logic to query a small collection of papers
-    pass
-
-    paper_collection = _get_papercollection_by_name(paper_list_name, uid)
-    collection_papers = _get_collection_papers(paper_collection, uid)
-    paper_contents = [ {'content':_get_paper_content(paper_name, 'full'), 'source': paper_name} for paper_name in collection_papers]
-    # call _display_papers to display the reference information
-    # reference_info = _display_papers(...)
 
 if __name__ == '__main__':
     uid = 'test_user'   
