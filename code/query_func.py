@@ -53,15 +53,13 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
     # call _display_papers to display the reference information
     # reference_info = _display_papers(...)
 
-    paper_list = get_paperlist_by_name(paper_list_name)
-
     # chunk the large collection of papers into chunks
     chunk_list=[]
-    for p in paper_list:
-        content = _get_paper_content(p ,mode="short")
-        chunks = get_chunks(content)
+    for p in paper_contents:
+        content = p['content']
+        chunks = get_chunks(content) # Generally, one abstract in one chunk
         for c in chunks:
-            chunk_list.append((p,c))
+            chunk_list.append((p["source"],c))
 
     #check for relevant chunks => paper name and paragraph content
     f = open(f"../prompts/check_for_related.txt", "r")
@@ -109,6 +107,7 @@ def query_individual_papers(paper_list_name, query, uid):
     
     collection_papers = _get_collection_papers(paper_list_name, uid)
 
+    #Todo: how to get the full context of the paper?
     paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in collection_papers]
     
     # ....
