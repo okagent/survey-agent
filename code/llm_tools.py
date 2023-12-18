@@ -51,9 +51,9 @@ def small_model_predict(prompt_list, max_tokens=1024):
 
 
 import os
-os.environ['OPENAI_API_KEY']="key"
-os.environ["https_proxy"]="http://127.0.0.1:7890"
-os.environ["http_proxy"]="http://127.0.0.1:7890"
+#os.environ['OPENAI_API_KEY']="key"
+#os.environ["https_proxy"]="http://127.0.0.1:7890"
+#os.environ["http_proxy"]="http://127.0.0.1:7890"
 from langchain.chat_models import ChatOpenAI
 def gpt_4_predict(prompt):
     llm = ChatOpenAI(model_name="gpt-4-turbo", temperature=0)

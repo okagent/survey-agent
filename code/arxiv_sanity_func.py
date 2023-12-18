@@ -51,7 +51,7 @@ def search_papers(query: str, time_filter: str = '') -> str:
     """
     return json2string(_arxiv_sanity_search(uid, query, search_type="search", time_filter=time_filter))
 
-def recommend_similar_papers(collection_name: str, time_filter: str = '') -> :
+def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str:
     """
     Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.
 
