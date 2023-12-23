@@ -1,6 +1,7 @@
 from langchain.text_splitter import CharacterTextSplitter
 
 #tokenizer is load from specific model, assume we use openchat-3.5
+
 model = "openchat/openchat_3.5"
 from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(model)
@@ -18,7 +19,7 @@ def num_tokens_from_string(string: str, encoding_name="cl100k_base") -> int:
     return num_tokens
 import requests
 import json
-#Assume we use openchat-3.5
+#Assume we use openchat-3.5, set up this model as described in readme file
 def small_model_predict(prompt_list, max_tokens=1024):
     url = "http://localhost:18888/v1/chat/completions"
     # The code you provided is making a POST request to a chatbot API. It is sending a list of
