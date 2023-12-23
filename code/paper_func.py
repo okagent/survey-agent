@@ -13,14 +13,14 @@ uid = 'test_user'
 
 # load paper_corpus.json
 import json
-'''
-paper_corpus_path='../data/arxiv_full_papers.json'
-with open(paper_corpus_path, 'r') as f:
-    paper_corpus_json = json.load(f)[0]
-    paper_corpus = { p['title']:p for p in random.sample(paper_corpus_json, 20)}
 
-json.dump(paper_corpus, open('../data/sample_papers.json', 'w'))
-'''
+# paper_corpus_path='../data/arxiv_full_papers.json'
+# with open(paper_corpus_path, 'r') as f:
+#     paper_corpus_json = json.load(f)[0]
+#     paper_corpus = { p['title']:p for p in random.sample(paper_corpus_json, 200)}
+
+# json.dump(paper_corpus, open('../data/sample_papers.json', 'w'))
+
 # load sample_papers instead
 with open('../data/sample_papers.json', 'r') as f:
     paper_corpus = json.load(f)
@@ -145,7 +145,7 @@ def _display_papers(paper_titles, user_inputs=None):
         for paper_name in paper_titles:
             paper_info.append(_get_paper_metadata(paper_name))
             paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
-    return json2string(paper_info, indent=4) 
+    return json2string(paper_info) 
 
 def _define_paper_collection(found_papers, paper_collection_name, uid):
     """Define a paper list based on a list of exact paper names."""
