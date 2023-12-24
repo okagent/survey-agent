@@ -183,7 +183,7 @@ def _get_collection_papers(collection_name, uid):
 
 def get_papercollection_by_name(collection_name: str) -> str:
     """
-    Retrieves a specified paper collection by its name, along with some displayed papers from the collection.
+    Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers.
 
     Args:
         collection_name (str): The name of the paper collection.
