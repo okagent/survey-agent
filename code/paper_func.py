@@ -14,16 +14,18 @@ uid = 'test_user'
 # load paper_corpus.json
 import json
 
-# paper_corpus_path='../data/arxiv_full_papers.json'
-# with open(paper_corpus_path, 'r') as f:
-#     paper_corpus_json = json.load(f)[0]
-#     paper_corpus = { p['title']:p for p in random.sample(paper_corpus_json, 200)}
+paper_corpus_path='../data/arxiv_full_papers.json'
+with open(paper_corpus_path, 'r', encoding='utf-8') as f:
+    paper_corpus_json = json.load(f)[0]
+    paper_corpus = { p['title']:p for p in paper_corpus_json }
+#     #paper_corpus = { p['title']:p for p in random.sample(paper_corpus_json, 200)}
+#     paper_corpus.update({ p['title']:p for p in random.sample(paper_corpus_json, 200)})
 
 # json.dump(paper_corpus, open('../data/sample_papers.json', 'w'))
 
-# load sample_papers instead
-with open('../data/sample_papers.json', 'r') as f:
-    paper_corpus = json.load(f)
+#load sample_papers instead
+# with open('../data/sample_papers.json', 'r') as f:
+#    paper_corpus = json.load(f)
 
 def _sync_paper_collections(paper_collections=None):
     """Synchronize/Load paper collections with the database."""
@@ -170,6 +172,7 @@ def _define_paper_collection(found_papers, paper_collection_name, uid):
 def _get_papercollection_by_name(collection_name, uid):
     """Find the name of the paper collection that best matches a fuzzy collection name."""
     # Find the closest match for the collection name
+   
     match = difflib.get_close_matches(collection_name, paper_collections[uid].keys(), n=1, cutoff=0.7)
     if match:
         return match[0]
