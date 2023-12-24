@@ -1,10 +1,161 @@
-from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO
-from paper_func import paper_corpus
-import random 
+import pickle
+from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus
+from feature_func import load_features
+from utils import convert_to_timestamp, json2string
+
+import os
+import time
+import random
+
+import numpy as np
+from sklearn import svm
+
 import string
-from utils import logger, json2string
 
 uid = 'test_user' 
+
+RET_NUM = 25
+
+paper_meta = {k:{"_time": convert_to_timestamp(v["published_date"])} for k, v in paper_corpus.items()}
+paper_tags = {}
+
+def search_rank(q: str = ''):
+    if not q:
+        return [], [] # no query? no results
+    qs = q.lower().strip().split() # split query by spaces and lowercase
+
+    match = lambda s: sum(min(3, s.lower().count(qp)) for qp in qs)
+    matchu = lambda s: sum(int(s.lower().count(qp) > 0) for qp in qs)
+    pairs = []
+    for pid, p in paper_corpus.items():
+        score = 0.0
+        score += 10.0 * matchu(' '.join(p['authors']))
+        score += 20.0 * matchu(p['title'])
+        score += 1.0 * match(p['abstract'])
+        if score > 0:
+            pairs.append((score, pid))
+
+    pairs.sort(reverse=True)
+    paper_titles = [p[1] for p in pairs]
+    scores = [p[0] for p in pairs]
+    return paper_titles, scores
+
+def svm_rank(tags: str = '', pid: str = '', C: float = 0.01):
+    # tag can be one tag or a few comma-separated tags or 'all' for all tags we have in db
+    # pid can be a specific paper id to set as positive for a kind of nearest neighbor search
+    if not (tags or pid):
+        return [], [], []
+
+    # load all of the features
+    features = load_features()
+    x, paper_titles = features['x'], features['paper_titles']
+    n, d = x.shape
+    ptoi, itop = {}, {}
+    for i, p in enumerate(paper_titles):
+        ptoi[p] = i
+        itop[i] = p
+
+    # construct the positive set
+    y = np.zeros(n, dtype=np.float32)
+    if pid:
+        y[ptoi[pid]] = 1.0
+    elif tags:
+        tags_filter_to = paper_tags.keys() if tags == 'all' else set(tags.split(','))
+        for tag, paper_titles in paper_tags.items():
+            if tag in tags_filter_to:
+                for pid in paper_titles:
+                    y[ptoi[pid]] = 1.0
+
+    if y.sum() == 0:
+        return [], [], [] # there are no positives?
+
+    # classify
+    clf = svm.LinearSVC(class_weight='balanced', verbose=False, max_iter=10000, tol=1e-6, C=C)
+    clf.fit(x, y)
+    s = clf.decision_function(x)
+    sortix = np.argsort(-s)
+    paper_titles = [itop[ix] for ix in sortix]
+    scores = [100*float(s[ix]) for ix in sortix]
+
+    # get the words that score most positively and most negatively for the svm
+    ivocab = {v:k for k,v in features['vocab'].items()} # index to word mapping
+    weights = clf.coef_[0] # (n_features,) weights of the trained svm
+    sortix = np.argsort(-weights)
+    words = []
+    for ix in list(sortix[:40]) + list(sortix[-20:]):
+        words.append({
+            'word': ivocab[ix],
+            'weight': weights[ix],
+        })
+
+    return paper_titles, scores, words
+
+def time_rank():
+    ms = sorted(paper_meta.items(), key=lambda kv: kv[1]['_time'], reverse=True)
+    tnow = time.time()
+    paper_titles = [k for k, v in ms]
+    scores = [(tnow - v['_time'])/60/60/24 for k, v in ms] # time delta in days
+    return paper_titles, scores
+
+def random_rank():
+    paper_titles = list(paper_meta.keys())
+    random.shuffle(paper_titles)
+    scores = [0 for _ in paper_titles]
+    return paper_titles, scores
+
+def _call_arxiv_sanity_search(rank='time', tags='', pid='', time_filter='', q='', skip_have='no', svm_c='', page_number=1):
+    # if a query is given, override rank to be of type "search"
+    # this allows the user to simply hit ENTER in the search field and have the correct thing happen
+    if q:
+        rank = 'search'
+
+    # try to parse opt_svm_c into something sensible (a float)
+    try:
+        C = float(svm_c)
+    except ValueError:
+        C = 0.01 # sensible default, i think
+
+    # rank papers: by tags, by time, by random
+    words = [] # only populated in the case of svm rank
+    if rank == 'search':
+        paper_titles, scores = search_rank(q=q)
+    elif rank == 'tags':
+        paper_titles, scores, words = svm_rank(tags=tags, C=C)
+    elif rank == 'pid':
+        paper_titles, scores, words = svm_rank(pid=pid, C=C)
+    elif rank == 'time':
+        paper_titles, scores = time_rank()
+    elif rank == 'random':
+        paper_titles, scores = random_rank()
+    else:
+        raise ValueError("rank %s is not a thing" % (rank, ))
+
+    # filter by time
+    if time_filter:
+        kv = {k:v for k,v in paper_meta.items()} # read all of metas to memory at once, for efficiency
+        tnow = time.time()
+        deltat = int(time_filter)*60*60*24 # allowed time delta in seconds
+        keep = [i for i, pid in enumerate(paper_titles) if (tnow - kv[pid]['_time']) < deltat]
+        paper_titles, scores = [paper_titles[i] for i in keep], [scores[i] for i in keep]
+
+    # optionally hide papers we already have
+    if skip_have == 'yes':
+        have = set().union(*paper_tags.values())
+        keep = [i for i,pid in enumerate(paper_titles) if pid not in have]
+        paper_titles, scores = [paper_titles[i] for i in keep], [scores[i] for i in keep]
+
+    # crop the number of results to RET_NUM, and paginate
+    try:
+        page_number = max(1, int(page_number))
+    except ValueError:
+        page_number = 1
+
+    start_index = (page_number - 1) * RET_NUM # desired starting index
+    end_index = min(start_index + RET_NUM, len(paper_titles)) # desired ending index
+    paper_titles = paper_titles[start_index:end_index]
+    scores = scores[start_index:end_index]
+
+    return paper_titles
 
 def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     # search_type: "by_keywords"表示按关键词搜索，"by_collections"表示按论文列表推荐
@@ -13,20 +164,16 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
 
     ## search for papers
     if search_type == 'search':
-        request = {'opt_rank': 'search', 'q': search_query, 'time_filter': time_filter}
+        request = {'rank': 'search', 'q': search_query, 'time_filter': time_filter}
     elif search_type == 'recommend':
-        request = {'opt_rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': True}
-    
-    ## _call_arxiv_sanity_search(request)
+        request = {'rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': True}
     
     # 需要维护paper_collections和arxiv-sanity-lite后端的tags一致
     
-    pass
-
-
+    found_papers = _call_arxiv_sanity_search(**request)
 
     # placeholder: 随便返回一些paper
-    found_papers = random.sample(paper_corpus.keys(), 3)
+    # found_papers = random.sample(paper_corpus.keys(), 3)
 
 
     # Define the search result as a paper collection
@@ -38,11 +185,12 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     return _display_papers(found_papers)
 
 
-def search_papers(query: str, time_filter: str = '') -> str:
+def search_papers(uid: str, query: str, time_filter: str = '') -> str:
     """
     Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.
 
     Args:
+        uid (str): The user id.
         query (str): The search query used to find relevant papers.
         time_filter (str, optional): Filter papers that were publised 'time_filter' days ago. Defaults to an empty string (no time filtering).
 
@@ -51,11 +199,12 @@ def search_papers(query: str, time_filter: str = '') -> str:
     """
     return json2string(_arxiv_sanity_search(uid, query, search_type="search", time_filter=time_filter))
 
-def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str:
+def recommend_similar_papers(uid: str, collection_name: str, time_filter: str = '') -> str:
     """
     Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.
 
     Args:
+        uid (str): The user id.
         collection_name (str): The name of the paper collection based on which recommendations are to be made.
         time_filter (str, optional): Filter papers that were publised 'time_filter' days ago. Defaults to an empty string (no time filtering).
 
