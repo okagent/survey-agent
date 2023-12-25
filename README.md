@@ -16,5 +16,5 @@ Need model tokenizer for calculating tokens of chunk or controlling
 ## set up config file
 
 
-##Use GPT 4
+## Use GPT 4
 You are supposed to export OPENAI_API_KEY="your_key" before use GPT-4 model
