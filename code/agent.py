@@ -66,27 +66,24 @@ tools = [
         func=retrieve_papers,
         description="Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content.",
     ),
+    StructuredTool.from_function(
+        func=search_papers,
+        description="Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.",
+    ), 
+    StructuredTool.from_function(
+        func=recommend_similar_papers,
+        description="Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.",
+    ),
+    StructuredTool.from_function(
+        func=query_area_papers,
+        description="Query a large collection of papers (based on their abstracts) to find an answer to a specific query.",
+    ),
+    StructuredTool.from_function(
+        func=query_individual_papers,
+        description="Query a collection of papers (based on their full texts) to find an answer to a specific query.",
+    ),
 ]
 
-'''
-# TODO: These functions are not yet implemented
-StructuredTool.from_function(
-    func=search_papers,
-    description="Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.",
-), 
-StructuredTool.from_function(
-    func=recommend_similar_papers,
-    description="Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.",
-),
-StructuredTool.from_function(
-    func=query_area_papers,
-    description="Query a large collection of papers (based on their abstracts) to find an answer to a specific query.",
-),
-StructuredTool.from_function(
-    func=query_individual_papers,
-    description="Query a collection of papers (based on their full texts) to find an answer to a specific query.",
-),
-'''
 
 
 template = """

@@ -166,10 +166,10 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     if search_type == 'search':
         request = {'rank': 'search', 'q': search_query, 'time_filter': time_filter}
     elif search_type == 'recommend':
-        request = {'rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': True}
+        request = {'rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': 'yes'}
     
     # 需要维护paper_collections和arxiv-sanity-lite后端的tags一致
-    
+
     found_papers = _call_arxiv_sanity_search(uid=uid, **request)
 
     # placeholder: 随便返回一些paper
@@ -219,9 +219,9 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str
 
 if __name__ == '__main__':
     uid = 'test_user'  
+    import pdb;
+    pdb.set_trace()
     print('Recommend Papers: \n', recommend_similar_papers('Paper Collection 123'))
-
-    import pdb; pdb.set_trace()
 
     print('Search Papers: \n', search_papers('persona of LLMs'))
 

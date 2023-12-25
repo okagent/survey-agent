@@ -14,6 +14,11 @@ import pickle
 import tempfile
 from contextlib import contextmanager
 
+# Load config 
+config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+with open(config_path, 'r') as f:
+    config = json.load(f)
+
 logger = logging.getLogger(__name__)
 
 file_handler = logging.FileHandler('log.log', encoding='utf-8')
