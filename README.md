@@ -5,6 +5,9 @@ pip3 install ochat
 python -m ochat.serving.openai_api_server --model openchat/openchat_3.5  --engine-use-ray --worker-use-ray --tensor-parallel-size 1
 ```
 You can choose the num of gpus using parameter  "--tensor-parallel-size "
+## Tokenizer
+Need model tokenizer for calculating tokens of chunk or controlling
+
 
 ## set up arxiv-sanity
 
@@ -13,3 +16,5 @@ You can choose the num of gpus using parameter  "--tensor-parallel-size "
 ## set up config file
 
 
+##Use GPT 4
+You are supposed to export OPENAI_API_KEY="your_key" before use GPT-4 model
