@@ -1,5 +1,5 @@
 import pickle
-from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus
+from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus, paper_collections
 from feature_func import load_features
 from utils import convert_to_timestamp, json2string
 
@@ -17,7 +17,6 @@ uid = 'test_user'
 RET_NUM = 25
 
 paper_meta = {k:{"_time": convert_to_timestamp(v["published_date"])} for k, v in paper_corpus.items()}
-paper_tags = {}
 
 def search_rank(q: str = ''):
     if not q:
@@ -40,7 +39,7 @@ def search_rank(q: str = ''):
     scores = [p[0] for p in pairs]
     return paper_titles, scores
 
-def svm_rank(tags: str = '', pid: str = '', C: float = 0.01):
+def svm_rank(uid, tags: str = '', pid: str = '', C: float = 0.01):
     # tag can be one tag or a few comma-separated tags or 'all' for all tags we have in db
     # pid can be a specific paper id to set as positive for a kind of nearest neighbor search
     if not (tags or pid):
@@ -60,11 +59,12 @@ def svm_rank(tags: str = '', pid: str = '', C: float = 0.01):
     if pid:
         y[ptoi[pid]] = 1.0
     elif tags:
-        tags_filter_to = paper_tags.keys() if tags == 'all' else set(tags.split(','))
-        for tag, paper_titles in paper_tags.items():
+        tags_filter_to = paper_collections[uid].keys() if tags == 'all' else set(tags.split(','))
+        for tag, paper_titles in paper_collections[uid].items():
             if tag in tags_filter_to:
                 for pid in paper_titles:
-                    y[ptoi[pid]] = 1.0
+                    if pid in ptoi:
+                        y[ptoi[pid]] = 1.0
 
     if y.sum() == 0:
         return [], [], [] # there are no positives?
@@ -103,7 +103,7 @@ def random_rank():
     scores = [0 for _ in paper_titles]
     return paper_titles, scores
 
-def _call_arxiv_sanity_search(rank='time', tags='', pid='', time_filter='', q='', skip_have='no', svm_c='', page_number=1):
+def _call_arxiv_sanity_search(uid, rank='time', tags='', pid='', time_filter='', q='', skip_have='no', svm_c='', page_number=1):
     # if a query is given, override rank to be of type "search"
     # this allows the user to simply hit ENTER in the search field and have the correct thing happen
     if q:
@@ -120,9 +120,9 @@ def _call_arxiv_sanity_search(rank='time', tags='', pid='', time_filter='', q=''
     if rank == 'search':
         paper_titles, scores = search_rank(q=q)
     elif rank == 'tags':
-        paper_titles, scores, words = svm_rank(tags=tags, C=C)
+        paper_titles, scores, words = svm_rank(uid=uid, tags=tags, C=C)
     elif rank == 'pid':
-        paper_titles, scores, words = svm_rank(pid=pid, C=C)
+        paper_titles, scores, words = svm_rank(uid=uid, pid=pid, C=C)
     elif rank == 'time':
         paper_titles, scores = time_rank()
     elif rank == 'random':
@@ -140,7 +140,7 @@ def _call_arxiv_sanity_search(rank='time', tags='', pid='', time_filter='', q=''
 
     # optionally hide papers we already have
     if skip_have == 'yes':
-        have = set().union(*paper_tags.values())
+        have = set().union(*paper_collections[uid].values())
         keep = [i for i,pid in enumerate(paper_titles) if pid not in have]
         paper_titles, scores = [paper_titles[i] for i in keep], [scores[i] for i in keep]
 
@@ -170,7 +170,7 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     
     # 需要维护paper_collections和arxiv-sanity-lite后端的tags一致
     
-    found_papers = _call_arxiv_sanity_search(**request)
+    found_papers = _call_arxiv_sanity_search(uid=uid, **request)
 
     # placeholder: 随便返回一些paper
     # found_papers = random.sample(paper_corpus.keys(), 3)
