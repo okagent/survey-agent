@@ -1,8 +1,33 @@
+from utils import *
+
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.schema import HumanMessage
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import LLMChain
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
+)
+#tokenizer is load from specific model
 
-#tokenizer is load from specific model, assume we use openchat-3.5
+model = config['model_name']
 
-model = "openchat/openchat_3.5"
+model_path_dict = {
+    "mixtral": "mistralai/Mixtral-8x7B-v0.1",
+    "openchat-3.5": "openchat/openchat_3.5",
+    "mistral-0.2":"mistralai/Mistral-7B-Instruct-v0.2",
+    "vicuna-1.5":"lmsys/vicuna-7b-v1.5",
+    "chatglm3":"THUDM/chatglm3-6b-32k",
+}
+
+model_url_dict = {
+    "mixtral": "http://10.176.40.135:8000/v1",
+    "openchat-3.5": "http://localhost:18888/v1/chat/completions",  #Assume set up the model at local
+    "mistral-0.2":"http://10.176.40.130:8301/v1",
+    "vicuna-1.5":"http://10.176.40.130:8401/v1",
+    "chatglm3":"http://10.176.40.130:8501/v1", 
+}
 from transformers import AutoTokenizer
 tokenizer = AutoTokenizer.from_pretrained(model)
 
@@ -21,42 +46,54 @@ import requests
 import json
 #Assume we use openchat-3.5, set up this model as described in readme file
 def small_model_predict(prompt_list, max_tokens=1024):
-    url = "http://localhost:18888/v1/chat/completions"
+    
     # The code you provided is making a POST request to a chatbot API. It is sending a list of
     # messages as input to the chatbot and receiving a response. Here's a breakdown of what the
     # code is doing:
     res_list=[]
     for mess in prompt_list:
-        data = {
-            "model": "openchat_3.5",
-            "temperature":0,
-            "messages": [{"role": "user", "content": mess}]
-        }
+        if "openchat" in model:
+            
+            data = {
+                "model": "openchat_3.5",
+                "temperature":0,
+                "messages": [{"role": "user", "content": mess}]
+            }
 
-        # Make the POST request
-        response = requests.post(url, headers={"Content-Type": "application/json"}, data=json.dumps(data))
+            # Make the POST request
+            response = requests.post(model_url_dict[model], headers={"Content-Type": "application/json"}, data=json.dumps(data))
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            # print("Response:", response.json())
-            print("prompt: ", mess)
-            print("res: ", response.json()["choices"][0]["message"]["content"])
-            res_list.append(response.json()["choices"][0]["message"]["content"])
-            # print("prompt: ", mess)
-            # print("res:", response.json()["choices"][0]["message"]["content"])
+            # Check if the request was successful
+            if response.status_code == 200:
+                # print("Response:", response.json())
+                print("prompt: ", mess)
+                print("res: ", response.json()["choices"][0]["message"]["content"])
+                res_list.append(response.json()["choices"][0]["message"]["content"])
+            else:
+                print("Error:", response.status_code, response.text)
+        elif "mixtral" in model:
+            llm = ChatOpenAI(model=model_path_dict[model], api_key='EMPTY', base_url=model_url_dict[model])
+            messages = [HumanMessage(content=mess),]
+            s = llm(messages)
+            res_list.append(s)
         else:
-            print("Error:", response.status_code, response.text)
+            chat = ChatOpenAI(openai_api_key="EMPTY", openai_api_base=model_url_dict[model])
+            prompt_template = ChatPromptTemplate.from_messages([
+                ("system", ""),
+                ("human", "{text}"),
+            ])
+            chain = LLMChain(llm=chat, prompt=prompt_template)
+            result = chain.run(text = mess)
+            res_list.append(result)
             
     return res_list
     
 
 
 import os
-#os.environ['OPENAI_API_KEY']="key"
-#os.environ["https_proxy"]="http://127.0.0.1:7890"
-#os.environ["http_proxy"]="http://127.0.0.1:7890"
+
 from langchain.chat_models import ChatOpenAI
 def gpt_4_predict(prompt):
-    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature=0)
+    llm = ChatOpenAI(model_name="gpt-4-turbo")
     return llm.predict(prompt)
     

@@ -74,6 +74,8 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
     f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
     query_chunk = f.read()
     query_chunk_prompts=[]
+    
+    #Only return related chunks
     for i,j in zip(res,chunk_list):
         if "yes" in i.lower():
             leave={}
@@ -107,52 +109,35 @@ def query_individual_papers(paper_list_name, query, uid):
     
     collection_papers = _get_collection_papers(paper_list_name, uid)
 
-    #Todo: how to get the full context of the paper?
-    paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in collection_papers]
+    #Get the full context of the paper
+    paper_contents = [ {'content':_get_paper_content(paper_name, 'full'), 'source': paper_name} for paper_name in collection_papers]
     
-    # ....
-
-    # call _display_papers to display the reference information
-    # reference_info = _display_papers(...) 
-
-    # Assume we can get a list of paper names
-    paper_list = get_paperlist_by_name(paper_list_name)
     
-    # chunk the large collection of papers into chunks
-    chunk_list=[]
-    for p in paper_list:
-        content = _get_paper_content(p ,mode="short")
-        chunks = get_chunks(content)
-        for c in chunks:
-            chunk_list.append((p,c))
+    #Assume we can read all the papers at once using long-context model
             
-    #check for relevant chunks => paper name and paragraph content
-    f = open(f"../prompts/check_for_related.txt", "r")
-    check_for_related = f.read()
-    prompts=[]
-    for d in chunk_list:
-        prompts.append(check_for_related.format(title=d[0], content=d[1]))
-    res = small_model_predict(prompts)
-    
-    #parse for references, answers
-    answer_and_source=[]
-    f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
-    query_chunk = f.read()
-    query_chunk_prompts=[]
-    for i,j in zip(res,chunk_list):
-        if "yes" in i.lower():
-            leave={}
-            leave['source_content'] = j[1]
-            leave['source_paper'] = j[0]
-            answer_and_source.append(leave)
-            query_chunk_prompts.append(query_chunk.format(chunk=j[1], question=question))
-    answers = small_model_predict(query_chunk_prompts)
-    for i,j in zip(answers, answer_and_source):
-        j['answer'] = i
+            
+    whole_paper_content = ""
+    source_list = []
+    for paper in paper_content:
+        whole_paper_content = whole_paper_content+paper['content']+"\n\n\n"
+        source_list.append(paper["source"])
         
-    #merge for final complete answer if needed
+        
+    f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
+    query_paper = f.read()
+    answer_with_source=[]
+
+    prompt = query_paper.format(paper=whole_paper_content, question=query)
+    res = gpt_4_predict(prompt)
+    leave = {
+        "answer": res,
+        "source_paper": source_list,
+        "source_content": whole_paper_content
+    }
+    answer_with_source.append(leave)
+
+    return answer_with_source
     
-    return answer_and_source
     
 
 

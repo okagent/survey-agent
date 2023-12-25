@@ -1,1 +1,12 @@
+Please read the attached scientific paper carefully. Focus on understanding its methodology, results, and conclusions.
 
+Based on your analysis of the paper, answer the following question:
+
+{question}
+
+
+Paper content:
+
+{paper}
+
+In your response, include direct citations from the paper that support your answer. Explain how these citations relate to the question and provide a clear, evidence-backed explanation.
