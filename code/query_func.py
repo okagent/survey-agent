@@ -150,7 +150,7 @@ if __name__ == '__main__':
     print(res)
     
     # Assume we can get a list of paper names
-    # paper_list = get_paperlist_by_name(paper_list_name)
+
     
     # # Assume we can put all the content of one paper into the model
     # f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")

@@ -57,7 +57,7 @@ def get_papers_and_define_collections(paper_titles: List[str], paper_collection_
 
     found_papers = _get_papers_by_name(paper_titles)
     _define_paper_collection(found_papers, paper_collection_name, uid)
-    return _display_papers(found_papers, user_inputs=paper_titles)
+    return _display_papers(found_papers, paper_collection_name, user_inputs=paper_titles)
 
 def _get_paper_content(paper_name, mode):
     """Get text content of a paper based on its exact name."""
@@ -131,7 +131,8 @@ def _get_papers_by_name(paper_titles):
     
     return found_papers
 
-def _display_papers(paper_titles, user_inputs=None):
+def _display_papers(paper_titles, paper_collection_name, user_inputs=None, paper_content=None):
+
     """Display paper information based on a list of exact paper names."""
     paper_info = []
     if user_inputs:
@@ -144,21 +145,29 @@ def _display_papers(paper_titles, user_inputs=None):
                 paper_info.append({'title': user_input_name, 'status': PAPER_NOT_FOUND_INFO})
     else:
         # called by other functions, where paper titles are all valid
-        for paper_name in paper_titles:
+        for i, paper_name in enumerate(paper_titles):
             paper_info.append(_get_paper_metadata(paper_name))
             paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
-    return json2string(paper_info) 
+            if paper_content:
+                paper_info[-1]['relevant content'] = paper_content[i].page_content
+
+    return json2string({'Collection': paper_collection_name, 'Papers': paper_info})
 
 def _define_paper_collection(found_papers, paper_collection_name, uid):
     """Define a paper list based on a list of exact paper names."""
-    found_papers = [p for p in found_papers if p]  # Remove None from the list
+    found_papers = list(set([p for p in found_papers if p]))  # Remove None from the list
+    
+    # if found_papers are empty
+    if not found_papers:
+        logger.info(f"The target paper collection {paper_collection_name} is empty.")
+        return False
 
     paper_collections.setdefault(uid, {}) 
     if paper_collection_name in paper_collections[uid]:
         # paper_collection_name already exists, use a random name instead
         import string 
         import random 
-        new_paper_collection_name = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(5))
+        new_paper_collection_name = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(5)) + paper_collection_name
         logger.info(f"Paper collection name {paper_collection_name} already exists, use a random name {new_paper_collection_name} instead.")
         paper_collection_name = new_paper_collection_name
 
@@ -203,7 +212,8 @@ def get_papercollection_by_name(collection_name: str) -> str:
         return COLLECTION_NOT_FOUND_INFO
     else:
         collection_papers = _get_collection_papers(paper_collection_name, uid)[:3]
-        return json2string({'Collection': paper_collection_name, 'Papers': _display_papers(collection_papers)})
+        return _display_papers(collection_papers, paper_collection_name)
+    
 
 def update_paper_collection(target_collection_name: str, source_collection_name: str, paper_indexes: str, action: str) -> bool:
     """
@@ -279,11 +289,12 @@ for title, p in paper_corpus.items():
     paper_docs.extend([Document(page_content=page_content_piece, metadata={**{k:p[k] for k in ['title']}, **{'ith_piece': i}}) for i, page_content_piece in enumerate(page_content_pieces)])
 
 retriever = BM25Retriever.from_documents(paper_docs)
+num_retrival = 3
 
 def _retrieve_papers(query):
     result = retriever.get_relevant_documents(query)
     if len(result) > 0:
-        return result[0]
+        return result[:num_retrival]
     else:
         return None
     
@@ -298,27 +309,31 @@ def retrieve_papers(query: str) -> str:
         str: The relevant paper and content. 
     """
     result = _retrieve_papers(query)
+
     if result:
-        res = f'Paper: {result.metadata["title"]}\nContent: {result.page_content}'
-        return res
+        found_papers = [p.metadata['title'] for p in result]
+        paper_collection_name = f'<BM25 results of query "{query}">'
+        _define_paper_collection(found_papers, paper_collection_name, uid)
+
+        return _display_papers(found_papers, paper_collection_name, paper_content=result) 
     else:
         return RETRIEVE_NOTHING_INFO
 
 
 if __name__ == '__main__':
 
-    print('retrieve_papers: ', retrieve_papers('''what is Numerical Question Answering?''')[:100])
-    pdb.set_trace()
+    print('retrieve_papers: ', retrieve_papers('''what is Numerical Question Answering?'''))
+
     
-    print('get_papers_and_define_collections: ', get_papers_and_define_collections(paper_titles=["Semantic Relation Classification via Bidirectional LSTM Networks with Entity-aware Attention using", 'Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP', 'Does Role-Playing Chatbots Capture the Character Personalities? Assessing Personality Traits for Role-Playing'], paper_collection_name='Paper Collection 123',uid=uid))
+    print('get_papers_and_define_collections: ', get_papers_and_define_collections(paper_titles=["Semantic Relation Classification via Bidirectional LSTM Networks with Entity-aware Attention using", 'Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP', 'Does Role-Playing Chatbots Capture the Character Personalities? Assessing Personality Traits for Role-Playing'], paper_collection_name='Paper Collection 123'))
     
 
-    print('get_papercollection_by_name: ', get_papercollection_by_name("Paper Collection ", uid=uid))
+    print('get_papercollection_by_name: ', get_papercollection_by_name("Paper Collection "))
     
     
     print('_get_paper_content: ', _get_paper_content('Towards Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP Systems', mode='abstract'))
 
-    print('update_paper_collection ', update_paper_collection('123 asd Papers', 'Paper Collection 123', '1-2', 'del', uid))
+    print('update_paper_collection ', update_paper_collection('123 asd Papers', 'Paper Collection 123', '1-2', 'del'))
     
 
 
