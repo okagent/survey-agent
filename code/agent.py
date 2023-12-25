@@ -1,15 +1,13 @@
 # Load config
-import configparser
-
-config = configparser.ConfigParser()
-config.read("./secrets.ini")
+from utils import config
 
 # Set API key
 import os
-os.environ.update({"OPENAI_API_KEY": config["OPENAI"]["OPENAI_API_KEY"]})
+os.environ.update({"OPENAI_API_KEY": config["openai_apikey"]})
 import openai
-openai.api_key = config["OPENAI"]["OPENAI_API_KEY"]
+openai.api_key = config["openai_apikey"]
 print(os.environ["OPENAI_API_KEY"])
+
 
 # Set up cache for LLM
 from langchain.globals import set_llm_cache
