@@ -29,7 +29,7 @@ model_url_dict = {
     "chatglm3":"http://10.176.40.130:8501/v1", 
 }
 from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained(model)
+tokenizer = AutoTokenizer.from_pretrained(model_path_dict[model])
 
 def get_chunks(story, separator = ". ", chunk_size=1000):
     

@@ -137,29 +137,34 @@ def query_individual_papers(paper_list_name, query, uid):
     answer_with_source.append(leave)
 
     return answer_with_source
-    
-    
+
+#Assume use on 130 or 135, you should connect to the huggingface
+import os
+os.environ["https_proxy"]="http://127.0.0.1:7890"
+os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 
 if __name__ == '__main__':
     uid = 'test_user'   
-    query_area_papers(paper_list_name='123 asd Papers', query='summarize this papers', uid=uid)
-    # Assume we can get a list of paper names
-    paper_list = get_paperlist_by_name(paper_list_name)
+    res = query_area_papers(paper_list_name='123 asd Papers', question='summarize this papers')
+    print(res)
     
-    # Assume we can put all the content of one paper into the model
-    f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
-    query_paper = f.read()
-    answer_with_source=[]
-    for p in paper_list:
-        paper_content = _get_paper_content(p, mode="full")
-        prompt = query_paper.format(content=paper_content, question=question)
-        res = gpt_4_predict(prompt)
-        leave = {
-            "answer": res,
-            "source_paper": p,
-            "source_content": paper_content
-        }
-        answer_with_source.append(leave)
+    # Assume we can get a list of paper names
+    # paper_list = get_paperlist_by_name(paper_list_name)
+    
+    # # Assume we can put all the content of one paper into the model
+    # f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
+    # query_paper = f.read()
+    # answer_with_source=[]
+    # for p in paper_list:
+    #     paper_content = _get_paper_content(p, mode="full")
+    #     prompt = query_paper.format(content=paper_content, question=question)
+    #     res = gpt_4_predict(prompt)
+    #     leave = {
+    #         "answer": res,
+    #         "source_paper": p,
+    #         "source_content": paper_content
+    #     }
+    #     answer_with_source.append(leave)
     
     #return answer_with_source
