@@ -72,10 +72,10 @@ def small_model_predict(prompt_list, max_tokens=1024):
             else:
                 print("Error:", response.status_code, response.text)
         elif "mixtral" in model:
-            llm = ChatOpenAI(model=model_path_dict[model], api_key='EMPTY', base_url=model_url_dict[model])
+            llm = ChatOpenAI(model='/home/huggingface_models/models--mistralai--Mixtral-8x7B-Instruct-v0.1/snapshots/e0bbb53cee412aba95f3b3fa4fc0265b1a0788b2', api_key='EMPTY', base_url=model_url_dict[model])
             messages = [HumanMessage(content=mess),]
             s = llm(messages)
-            res_list.append(s)
+            res_list.append(s.content)
         else:
             chat = ChatOpenAI(openai_api_key="EMPTY", openai_api_base=model_url_dict[model])
             prompt_template = ChatPromptTemplate.from_messages([
@@ -94,6 +94,6 @@ import os
 
 from langchain.chat_models import ChatOpenAI
 def gpt_4_predict(prompt):
-    llm = ChatOpenAI(model_name="gpt-4-turbo")
+    llm = ChatOpenAI(model_name="gpt-4-1106-preview")
     return llm.predict(prompt)
     
