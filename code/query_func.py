@@ -1,6 +1,9 @@
 
 from paper_func import *
 from llm_tools import *
+from paper_func import _get_collection_papers
+from paper_func import _get_papercollection_by_name
+from paper_func import _get_paper_content
 from utils import logger, json2string
 
 uid = 'test_user' 
@@ -28,7 +31,7 @@ def merge_chunk_responses(responses, question):
         # return merged_response
         pass
 
-def query_area_papers(paper_list_name: str, question: str) -> str:
+def query_area_papers(paper_list_name: str, question: str, uid) -> str:
     """
     Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
 
@@ -66,7 +69,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
     check_for_related = f.read()
     prompts=[]
     for d in chunk_list:
-        prompts.append(check_for_related.format(title=d[0], content=d[1]))
+        prompts.append(check_for_related.format(title=d[0], content=d[1], question=question))
     res = small_model_predict(prompts)
 
     #parse for references, answers
@@ -118,7 +121,7 @@ def query_individual_papers(paper_list_name, query, uid):
             
     whole_paper_content = ""
     source_list = []
-    for paper in paper_content:
+    for paper in paper_contents:
         whole_paper_content = whole_paper_content+paper['content']+"\n\n\n"
         source_list.append(paper["source"])
         
@@ -146,25 +149,9 @@ os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 if __name__ == '__main__':
     uid = 'test_user'   
-    res = query_area_papers(paper_list_name='123 asd Papers', question='summarize this papers')
+    res = query_area_papers(paper_list_name='123 asd Papers', question='summarize this papers', uid=uid)
     print(res)
     
-    # Assume we can get a list of paper names
-
     
-    # # Assume we can put all the content of one paper into the model
-    # f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
-    # query_paper = f.read()
-    # answer_with_source=[]
-    # for p in paper_list:
-    #     paper_content = _get_paper_content(p, mode="full")
-    #     prompt = query_paper.format(content=paper_content, question=question)
-    #     res = gpt_4_predict(prompt)
-    #     leave = {
-    #         "answer": res,
-    #         "source_paper": p,
-    #         "source_content": paper_content
-    #     }
-    #     answer_with_source.append(leave)
-    
-    #return answer_with_source
+    res = query_individual_papers(paper_list_name='123 asd Papers', query='summarize this papers', uid=uid)
+    print(res)
