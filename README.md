@@ -15,9 +15,20 @@ Need model tokenizer for calculating tokens of chunk or controlling
 
 ## set up config file
 
-## Use different models
+### Use different models
 You can choose form "openchat-3.5", "mixtral", "mistral-0.2", "vicuna-1.5", "chatglm3"
 Write the model name in config file 
 
-## Use GPT 4
+### Use GPT 4
 You are supposed to export OPENAI_API_KEY="your_key" before use GPT-4 model
+
+## Launch the agent server
+
+Run the following command to launch the agent server
+
+```
+cd code
+uvicorn server:app --host 0.0.0.0 --port 8132
+```
+
+The frontend will send request to the 8132 port, so make sure not to change the port number.
