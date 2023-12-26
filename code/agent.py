@@ -159,13 +159,8 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
-<<<<<<< HEAD
         print(self.template.format(**kwargs))
         # import pdb; pdb.set_trace()
-=======
-        #print(self.template.format(**kwargs))
-        
->>>>>>> 64b7597c69ec4a8e99fd778679b28dd70fe5e470
         return self.template.format(**kwargs)
 
 
@@ -249,22 +244,12 @@ if __name__ == "__main__":
     sys.stdout = DualOutput('output.txt')
 
     # Run the agent
-    try:
-        print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-
-<<<<<<< HEAD
-        ans = agent_executor.run('I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
-        # import pdb; pdb.set_trace()
-=======
-        ans = agent_executor.run('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
-        #import pdb; pdb.set_trace()
->>>>>>> 64b7597c69ec4a8e99fd778679b28dd70fe5e470
-        
-    finally:
-        
-        print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-
-
-
-
-
+    user_input = input("Please enter your query: ")
+    while user_input.lower()!='stop':
+        try:
+            print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+            ans = agent_executor.run(user_input) # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+            # import pdb; pdb.set_trace()
+        finally:
+            print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+        user_input = input("Please enter your query: ")
