@@ -256,6 +256,8 @@ if __name__ == "__main__":
         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
         query = 'I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"' 
 
+        # query = 'what is numerical question answering?'
+
         response, ans = run_agent()
         
     finally:
