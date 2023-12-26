@@ -31,7 +31,7 @@ def merge_chunk_responses(responses, question):
         # return merged_response
         pass
 
-def query_area_papers(paper_list_name: str, question: str, uid) -> str:
+def query_area_papers(paper_list_name: str, question: str, uid=uid) -> str:
     """
     Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
 
@@ -94,7 +94,7 @@ def query_area_papers(paper_list_name: str, question: str, uid) -> str:
 
     return answer_and_source
 
-def query_individual_papers(paper_list_name, query, uid):
+def query_individual_papers(paper_list_name, query, uid=uid):
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 

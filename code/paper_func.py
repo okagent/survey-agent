@@ -30,7 +30,6 @@ print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y
 
 if not os.path.exists(paper_pickle_path):
     paper_corpus_path='/data/survey_agent/processed_data'
-
     paper_corpus_json = []
     for filename in os.listdir(paper_corpus_path):
         file_path = os.path.join(paper_corpus_path, filename)
@@ -41,7 +40,7 @@ if not os.path.exists(paper_pickle_path):
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON in file {filename}: {e}")
     standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
-    paper_corpus = { p['title']:{key: p.get(key, "") for key in standard_keys} for p in paper_corpus_json }
+    paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
 
     paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
     for title, p in paper_corpus.items():

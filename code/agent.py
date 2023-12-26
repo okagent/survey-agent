@@ -159,7 +159,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
-        
         return self.template.format(**kwargs)
 
 
@@ -221,8 +220,9 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 def run_agent(query):
-    output = agent_executor.invoke(query) 
-    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
+    output = agent_executor.invoke(query)
+    print(output)
+    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
     ans = output['output'].split("Final Answer:")[-1].strip()
     # relevant_info = ... @shiwei
 
@@ -252,19 +252,16 @@ if __name__ == "__main__":
     sys.stdout = DualOutput('output.txt')
 
     # Run the agent
-    try:
-        print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-        query = 'I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"' 
+    #query = 'I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"' 
 
-        # query = 'what is numerical question answering?'
-
-        response, ans = run_agent()
-        
-    finally:
-        
-        print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-
-
-
-
-
+    # query = 'what is numerical question answering?'
+    
+    query = input("Please enter your query: ")
+    while query.lower()!='stop':
+        try:
+            print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+            response, ans = run_agent(query) # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+            # import pdb; pdb.set_trace()
+        finally:
+            print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+        query = input("Please enter your query: ")
