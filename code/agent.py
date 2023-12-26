@@ -174,7 +174,7 @@ class CustomOutputParser(AgentOutputParser):
             return AgentFinish(
                 # Return values is generally always a dictionary with a single `output` key
                 # It is not recommended to try anything else at the moment :)
-                return_values={"output": llm_output.split("Final Answer:")[-1].strip()},
+                return_values={"output": llm_output}, #{"output": llm_output.split("Final Answer:")[-1].strip()},
                 log=llm_output,
             )
         # Parse out the action and action input
@@ -211,7 +211,7 @@ agent = LLMSingleActionAgent(
     allowed_tools=tool_names,
 )
 agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tools, verbose=True
+    agent=agent, tools=tools, verbose=True, return_intermediate_steps=True
 )
 '''
 
@@ -240,8 +240,10 @@ if __name__ == "__main__":
     try:
         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-        ans = agent_executor.run('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
-        #import pdb; pdb.set_trace()
+        output = agent_executor.invoke('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+        response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
+        ans = output['output'].split("Final Answer:")[-1].strip()
+                
         
     finally:
         

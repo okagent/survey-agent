@@ -1,8 +1,8 @@
 import difflib
-import pdb 
 import random
 from utils import logger, json2string
 from typing import List
+import os
 
 PAPER_NOT_FOUND_INFO = "Sorry, we cannot find the paper you are looking for."
 COLLECTION_NOT_FOUND_INFO = "Sorry, we cannot find the paper collection you are looking for."
@@ -12,20 +12,50 @@ ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
 uid = 'test_user' 
 
 # load paper_corpus.json
+paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
+
 import json
+import time
+import pickle 
+from langchain.retrievers import BM25Retriever
+from langchain.schema import Document
+
+from langchain.docstore.document import Document
+
+t0 = time.time()
 
 paper_corpus_path='../data/arxiv_full_papers.json'
-with open(paper_corpus_path, 'r', encoding='utf-8') as f:
-    paper_corpus_json = json.load(f)[0]
-    paper_corpus = { p['title']:p for p in paper_corpus_json }
-#     #paper_corpus = { p['title']:p for p in random.sample(paper_corpus_json, 200)}
-#     paper_corpus.update({ p['title']:p for p in random.sample(paper_corpus_json, 200)})
 
-# json.dump(paper_corpus, open('../data/sample_papers.json', 'w'))
+if not os.path.exists(paper_pickle_path):
+    with open(paper_corpus_path, 'r', encoding='utf-8') as f:
+        paper_corpus_json = json.load(f)[0]
+        paper_corpus = { p['title']:p for p in paper_corpus_json }
 
-#load sample_papers instead
-# with open('../data/sample_papers.json', 'r') as f:
-#    paper_corpus = json.load(f)
+
+    paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
+    for title, p in paper_corpus.items():
+        page_content = p['full_text']
+        # 将p['full_text']划分为多个段落，每个段落1000个字符，naive
+        page_content_pieces = [page_content[i:i+1000] for i in range(0, len(page_content), 1000)]
+
+        paper_docs.extend([Document(page_content=page_content_piece, metadata={**{k:p[k] for k in ['title']}, **{'ith_piece': i}}) for i, page_content_piece in enumerate(page_content_pieces)])
+
+    retriever = BM25Retriever.from_documents(paper_docs)
+
+
+    # save paper_corpus, paper_docs and retriever into one pkl file
+    with open(paper_pickle_path, 'wb') as f:
+        pickle.dump([paper_corpus, paper_docs, retriever], f)
+
+else:
+    # and load it, would it be quicker? 72s -> 27s, 2.7x faster
+    with open(paper_pickle_path, 'rb') as f:
+        paper_corpus, paper_docs, retriever = pickle.load(f)
+
+print('Time to initiate paper corpus: {:.4f}'.format((time.time() - t0)))
+
+
+
 
 def _sync_paper_collections(paper_collections=None):
     """Synchronize/Load paper collections with the database."""
@@ -274,21 +304,6 @@ def update_paper_collection(target_collection_name: str, source_collection_name:
     _sync_paper_collections(paper_collections)
     return True
 
-
-from langchain.retrievers import BM25Retriever
-from langchain.schema import Document
-
-from langchain.docstore.document import Document
-
-paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
-for title, p in paper_corpus.items():
-    page_content = p['full_text']
-    # 将p['full_text']划分为多个段落，每个段落1000个字符，naive
-    page_content_pieces = [page_content[i:i+1000] for i in range(0, len(page_content), 1000)]
-
-    paper_docs.extend([Document(page_content=page_content_piece, metadata={**{k:p[k] for k in ['title']}, **{'ith_piece': i}}) for i, page_content_piece in enumerate(page_content_pieces)])
-
-retriever = BM25Retriever.from_documents(paper_docs)
 num_retrival = 3
 
 def _retrieve_papers(query):
