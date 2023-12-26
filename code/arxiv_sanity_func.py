@@ -182,7 +182,7 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     paper_collection_name = f'<{random_str}, {search_type} results of "{search_query}">'
     _define_paper_collection(found_papers, paper_collection_name, uid)
 
-    return _display_papers(found_papers)
+    return _display_papers(found_papers, paper_collection_name)
 
 
 def search_papers(query: str, time_filter: str = '') -> str:

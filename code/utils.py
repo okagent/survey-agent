@@ -38,6 +38,26 @@ console_handler = logging.StreamHandler()
 formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]')
 console_handler.setFormatter(formatter)
 
+import sys
+
+class DualOutput:
+    def __init__(self, filename):
+        self.file = open(filename, 'w')
+        self.stdout = sys.stdout
+
+    def write(self, text):
+        self.file.write(text)
+        self.stdout.write(text)
+
+    def flush(self):
+        self.file.flush()
+        self.stdout.flush()
+
+    def close(self):
+        self.file.close()
+
+
+
 def json2string(_json):
     return json.dumps(_json, indent=4) 
 

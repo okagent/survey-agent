@@ -5,5 +5,3 @@ __pycache__
 secret_key.txt
 *.log
 config.json
-data/paper_collections.json
-data/features.p
