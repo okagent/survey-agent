@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List
 
-from agent import agent_executor
+from agent import run_agent
 import json
 import asyncio
 
@@ -27,7 +27,9 @@ def generate(args: GenerateArgs):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         question = args.messages[-1].content
-        generated_text = agent_executor.run(question)
+
+        generated_text, ans = run_agent(question)
+
         yield "data:" + json.dumps(
             {
                 "token": {"id": -1, "text": "", "special": False, "logprob": 0},

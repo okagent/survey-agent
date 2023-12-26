@@ -159,8 +159,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
-        print(self.template.format(**kwargs))
-        # import pdb; pdb.set_trace()
         return self.template.format(**kwargs)
 
 
@@ -181,7 +179,7 @@ class CustomOutputParser(AgentOutputParser):
             return AgentFinish(
                 # Return values is generally always a dictionary with a single `output` key
                 # It is not recommended to try anything else at the moment :)
-                return_values={"output": llm_output.split("Final Answer:")[-1].strip()},
+                return_values={"output": llm_output}, #{"output": llm_output.split("Final Answer:")[-1].strip()},
                 log=llm_output,
             )
         # Parse out the action and action input
@@ -218,8 +216,17 @@ agent = LLMSingleActionAgent(
     allowed_tools=tool_names,
 )
 agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tools, verbose=True
+    agent=agent, tools=tools, verbose=True, return_intermediate_steps=True
 )
+
+def run_agent(query):
+    output = agent_executor.invoke(query) 
+    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
+    ans = output['output'].split("Final Answer:")[-1].strip()
+    # relevant_info = ... @shiwei
+
+    return response, ans
+
 '''
 
 from langchain.agents import AgentType, initialize_agent
@@ -244,12 +251,12 @@ if __name__ == "__main__":
     sys.stdout = DualOutput('output.txt')
 
     # Run the agent
-    user_input = input("Please enter your query: ")
-    while user_input.lower()!='stop':
+    query = input("Please enter your query: ")
+    while query.lower()!='stop':
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            ans = agent_executor.run(user_input) # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+            response, ans = run_agent(query) # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
             # import pdb; pdb.set_trace()
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-        user_input = input("Please enter your query: ")
+        query = input("Please enter your query: ")

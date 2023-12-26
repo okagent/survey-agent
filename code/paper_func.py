@@ -1,8 +1,8 @@
 import difflib
-import pdb 
 import random
 from utils import logger, json2string
 from typing import List
+import os
 import datetime
 
 PAPER_NOT_FOUND_INFO = "Sorry, we cannot find the paper you are looking for."
@@ -13,37 +13,58 @@ ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
 uid = 'test_user' 
 
 # load paper_corpus.json
+paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
+
 import json
+import time
+import pickle 
+from langchain.retrievers import BM25Retriever
+from langchain.schema import Document
+
+from langchain.docstore.document import Document
 import os
+
+
 
 print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-paper_corpus_path='/data/survey_agent/processed_data'
-paper_corpus_json = []
-for filename in os.listdir(paper_corpus_path):
-    file_path = os.path.join(paper_corpus_path, filename)
-    if filename.endswith('.json') and os.path.isfile(file_path):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            try:
-                paper_corpus_json += json.load(file)
-            except json.JSONDecodeError as e:
-                print(f"Error decoding JSON in file {filename}: {e}")
-standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
-paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
+if not os.path.exists(paper_pickle_path):
+    paper_corpus_path='/data/survey_agent/processed_data'
+    paper_corpus_json = []
+    for filename in os.listdir(paper_corpus_path):
+        file_path = os.path.join(paper_corpus_path, filename)
+        if filename.endswith('.json') and os.path.isfile(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                try:
+                    paper_corpus_json += json.load(file)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON in file {filename}: {e}")
+    standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
+    paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
+
+    paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
+    for title, p in paper_corpus.items():
+        page_content = p['full_text']
+        # 将p['full_text']划分为多个段落，每个段落1000个字符，naive
+        page_content_pieces = [page_content[i:i+1000] for i in range(0, len(page_content), 1000)]
+
+        paper_docs.extend([Document(page_content=page_content_piece, metadata={**{k:p[k] for k in ['title']}, **{'ith_piece': i}}) for i, page_content_piece in enumerate(page_content_pieces)])
+
+    retriever = BM25Retriever.from_documents(paper_docs)
+
+
+    # save paper_corpus, paper_docs and retriever into one pkl file
+    with open(paper_pickle_path, 'wb') as f:
+        pickle.dump([paper_corpus, paper_docs, retriever], f)
+
+else:
+    # and load it, would it be quicker? 72s -> 27s, 2.7x faster
+    with open(paper_pickle_path, 'rb') as f:
+        paper_corpus, paper_docs, retriever = pickle.load(f)
 
 print("="*10 + f"准备开始 - 时间3.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-# with open(paper_corpus_path, 'r', encoding='utf-8') as f:
-#     paper_corpus_json = json.load(f)[0]
-#     paper_corpus = { p['title']:p for p in paper_corpus_json }
-#     #paper_corpus = { p['title']:p for p in random.sample(paper_corpus_json, 200)}
-#     paper_corpus.update({ p['title']:p for p in random.sample(paper_corpus_json, 200)})
 
-# json.dump(paper_corpus, open('../data/sample_papers.json', 'w'))
-
-#load sample_papers instead
-# with open('../data/sample_papers.json', 'r') as f:
-#    paper_corpus = json.load(f)
 
 def _sync_paper_collections(paper_collections=None):
     """Synchronize/Load paper collections with the database."""
@@ -292,24 +313,6 @@ def update_paper_collection(target_collection_name: str, source_collection_name:
     _sync_paper_collections(paper_collections)
     return True
 
-
-from langchain.retrievers import BM25Retriever
-from langchain.schema import Document
-
-from langchain.docstore.document import Document
-from tqdm import tqdm
-
-print("="*10 + f"准备开始 - 时间3.3: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-
-paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
-for title, p in tqdm(paper_corpus.items()):
-    page_content = p['full_text']
-    # 将p['full_text']划分为多个段落，每个段落1000个字符，naive
-    page_content_pieces = [page_content[i:i+1000] for i in range(0, len(page_content), 1000)]
-
-    paper_docs.extend([Document(page_content=page_content_piece, metadata={**{k:p[k] for k in ['title']}, **{'ith_piece': i}}) for i, page_content_piece in enumerate(page_content_pieces)])
-
-retriever = BM25Retriever.from_documents(paper_docs)
 num_retrival = 3
 
 print("="*10 + f"准备开始 - 时间3.4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )

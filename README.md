@@ -1,4 +1,8 @@
 # Survey agent
+## Run the server
+
+uvicorn server:app --reload --host 0.0.0.0 --port 8080
+
 ## set up openchat model https://github.com/imoneoi/openchat
 ```
 pip3 install ochat
@@ -15,9 +19,26 @@ Need model tokenizer for calculating tokens of chunk or controlling
 
 ## set up config file
 
-## Use different models
+### Use different models
 You can choose form "openchat-3.5", "mixtral", "mistral-0.2", "vicuna-1.5", "chatglm3"
 Write the model name in config file 
 
-## Use GPT 4
+### Use GPT 4
 You are supposed to export OPENAI_API_KEY="your_key" before use GPT-4 model
+
+## Launch the agent server
+
+The server uses `uvicorn` to launch the agent server. Install `uvicorn` by running the following command
+
+```bash
+pip install uvicorn
+```
+
+Run the following command to launch the agent server
+
+```bash
+cd code
+uvicorn server:app --host 0.0.0.0 --port 8132
+```
+
+The frontend will send request to the 8132 port, so make sure not to change the port number.
