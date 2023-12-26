@@ -28,7 +28,7 @@ from langchain.agents import (
 from langchain.chains import LLMChain
 from langchain.prompts import StringPromptTemplate
 from langchain.schema import AgentAction, AgentFinish
-from query_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_papers
+from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_papers
 from arxiv_sanity_func import search_papers, recommend_similar_papers
 from query_func import query_area_papers, query_individual_papers 
 from langchain.tools import StructuredTool
@@ -232,7 +232,9 @@ if __name__ == "__main__":
     try:
         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-        agent_executor.run('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+        ans = agent_executor.run('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+        import pdb; pdb.set_trace()
+        
     finally:
         
         print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
