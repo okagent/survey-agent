@@ -219,8 +219,7 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str
 
 if __name__ == '__main__':
     uid = 'test_user'  
-    import pdb;
-    pdb.set_trace()
+
     print('Recommend Papers: \n', recommend_similar_papers('Paper Collection 123'))
 
     print('Search Papers: \n', search_papers('persona of LLMs'))
