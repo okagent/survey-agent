@@ -4,3 +4,4 @@ __pycache__
 *.ipynb
 secret_key.txt
 *.log
+config.json
