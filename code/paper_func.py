@@ -3,6 +3,7 @@ import random
 from utils import logger, json2string
 from typing import List
 import os
+import datetime
 
 PAPER_NOT_FOUND_INFO = "Sorry, we cannot find the paper you are looking for."
 COLLECTION_NOT_FOUND_INFO = "Sorry, we cannot find the paper collection you are looking for."
@@ -21,16 +22,26 @@ from langchain.retrievers import BM25Retriever
 from langchain.schema import Document
 
 from langchain.docstore.document import Document
+import os
 
-t0 = time.time()
 
-paper_corpus_path='../data/arxiv_full_papers.json'
+
+print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 if not os.path.exists(paper_pickle_path):
-    with open(paper_corpus_path, 'r', encoding='utf-8') as f:
-        paper_corpus_json = json.load(f)[0]
-        paper_corpus = { p['title']:p for p in paper_corpus_json }
+    paper_corpus_path='/data/survey_agent/processed_data'
 
+    paper_corpus_json = []
+    for filename in os.listdir(paper_corpus_path):
+        file_path = os.path.join(paper_corpus_path, filename)
+        if filename.endswith('.json') and os.path.isfile(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                try:
+                    paper_corpus_json += json.load(file)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON in file {filename}: {e}")
+    standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
+    paper_corpus = { p['title']:{key: p.get(key, "") for key in standard_keys} for p in paper_corpus_json }
 
     paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
     for title, p in paper_corpus.items():
@@ -52,8 +63,7 @@ else:
     with open(paper_pickle_path, 'rb') as f:
         paper_corpus, paper_docs, retriever = pickle.load(f)
 
-print('Time to initiate paper corpus: {:.4f}'.format((time.time() - t0)))
-
+print("="*10 + f"准备开始 - 时间3.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 
 
@@ -305,6 +315,8 @@ def update_paper_collection(target_collection_name: str, source_collection_name:
     return True
 
 num_retrival = 3
+
+print("="*10 + f"准备开始 - 时间3.4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 def _retrieve_papers(query):
     result = retriever.get_relevant_documents(query)
