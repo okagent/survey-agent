@@ -219,6 +219,15 @@ agent = LLMSingleActionAgent(
 agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent, tools=tools, verbose=True, return_intermediate_steps=True
 )
+
+def run_agent(query):
+    output = agent_executor.invoke(query) 
+    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
+    ans = output['output'].split("Final Answer:")[-1].strip()
+    # relevant_info = ... @shiwei
+
+    return response, ans
+
 '''
 
 from langchain.agents import AgentType, initialize_agent
@@ -247,9 +256,7 @@ if __name__ == "__main__":
         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
         query = 'I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"' 
 
-        output = agent_executor.invoke('what is Numerical Question Answering?') 
-        response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
-        ans = output['output'].split("Final Answer:")[-1].strip()
+        response, ans = run_agent()
         
     finally:
         
