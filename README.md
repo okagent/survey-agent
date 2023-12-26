@@ -28,9 +28,15 @@ You are supposed to export OPENAI_API_KEY="your_key" before use GPT-4 model
 
 ## Launch the agent server
 
+The server uses `uvicorn` to launch the agent server. Install `uvicorn` by running the following command
+
+```bash
+pip install uvicorn
+```
+
 Run the following command to launch the agent server
 
-```
+```bash
 cd code
 uvicorn server:app --host 0.0.0.0 --port 8132
 ```
