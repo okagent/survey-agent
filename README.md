@@ -1,4 +1,8 @@
 # Survey agent
+## Run the server
+
+uvicorn server:app --reload --host 0.0.0.0 --port 8080
+
 ## set up openchat model https://github.com/imoneoi/openchat
 ```
 pip3 install ochat

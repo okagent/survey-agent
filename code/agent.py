@@ -1,4 +1,6 @@
 # Load config
+import datetime
+print("="*10 + f"准备开始 - 时间1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from utils import config
 
 # Set API key
@@ -10,6 +12,7 @@ print(os.environ["OPENAI_API_KEY"])
 
 
 # Set up cache for LLM
+print("="*10 + f"准备开始 - 时间2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from langchain.globals import set_llm_cache
 from langchain.llms import OpenAI
 from langchain.cache import SQLiteCache
@@ -29,9 +32,13 @@ from langchain.agents import (
 from langchain.chains import LLMChain
 from langchain.prompts import StringPromptTemplate
 from langchain.schema import AgentAction, AgentFinish
+print("="*10 + f"准备开始 - 时间3: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_papers
+print("="*10 + f"准备开始 - 时间4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from arxiv_sanity_func import search_papers, recommend_similar_papers
+print("="*10 + f"准备开始 - 时间5: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from query_func import query_area_papers, query_individual_papers 
+print("="*10 + f"准备开始 - 时间6: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from langchain.tools import StructuredTool
 from langchain.callbacks import HumanApprovalCallbackHandler
 
@@ -152,7 +159,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
-        #print(self.template.format(**kwargs))
         
         return self.template.format(**kwargs)
 
@@ -174,7 +180,7 @@ class CustomOutputParser(AgentOutputParser):
             return AgentFinish(
                 # Return values is generally always a dictionary with a single `output` key
                 # It is not recommended to try anything else at the moment :)
-                return_values={"output": llm_output.split("Final Answer:")[-1].strip()},
+                return_values={"output": llm_output}, #{"output": llm_output.split("Final Answer:")[-1].strip()},
                 log=llm_output,
             )
         # Parse out the action and action input
@@ -211,8 +217,17 @@ agent = LLMSingleActionAgent(
     allowed_tools=tool_names,
 )
 agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tools, verbose=True
+    agent=agent, tools=tools, verbose=True, return_intermediate_steps=True
 )
+
+def run_agent(query):
+    output = agent_executor.invoke(query) 
+    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
+    ans = output['output'].split("Final Answer:")[-1].strip()
+    # relevant_info = ... @shiwei
+
+    return response, ans
+
 '''
 
 from langchain.agents import AgentType, initialize_agent
@@ -239,9 +254,9 @@ if __name__ == "__main__":
     # Run the agent
     try:
         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+        query = 'I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"' 
 
-        ans = agent_executor.run('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
-        #import pdb; pdb.set_trace()
+        response, ans = run_agent()
         
     finally:
         
