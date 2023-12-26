@@ -17,6 +17,7 @@ set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 
 # Build our agent
 import re
+import json
 from typing import List, Union
 
 from langchain.agents import (
@@ -28,7 +29,7 @@ from langchain.agents import (
 from langchain.chains import LLMChain
 from langchain.prompts import StringPromptTemplate
 from langchain.schema import AgentAction, AgentFinish
-from query_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_papers
+from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_papers
 from arxiv_sanity_func import search_papers, recommend_similar_papers
 from query_func import query_area_papers, query_individual_papers 
 from langchain.tools import StructuredTool
@@ -136,7 +137,7 @@ class CustomPromptTemplate(StringPromptTemplate):
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         print(self.template.format(**kwargs))
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         return self.template.format(**kwargs)
 
 
@@ -168,8 +169,12 @@ class CustomOutputParser(AgentOutputParser):
         action = match.group(1).strip()
         action_input = match.group(2)
         # Return the action and action input
+        try:
+            tool_input = json.loads(action_input.strip(" ").strip('"'))
+        except:
+            tool_input = action_input.strip(" ").strip('"')
         return AgentAction(
-            tool=action, tool_input=action_input.strip(" ").strip('"'), log=llm_output
+            tool=action, tool_input=tool_input, log=llm_output
         )
 
 output_parser = CustomOutputParser()
