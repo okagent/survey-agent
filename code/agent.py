@@ -220,8 +220,9 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 def run_agent(query):
-    output = agent_executor.invoke(query) 
-    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + step_info[1] for step_info in output['intermediate_steps'] ] + [output['output']]) 
+    output = agent_executor.invoke(query)
+    print(output)
+    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
     ans = output['output'].split("Final Answer:")[-1].strip()
     # relevant_info = ... @shiwei
 
