@@ -44,61 +44,64 @@ from langchain.callbacks import HumanApprovalCallbackHandler
 
 # Define which tools the agent can use to answer user queries
 # Schema will be automatically inferred by StructuredTool Class
+
+callbacks = [] #[HumanApprovalCallbackHandler()]
+
 tools = [
     StructuredTool.from_function(
         func=get_papers_and_define_collections,
         description="This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=get_papercollection_by_name,
         description="Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=get_paper_content,
         description="Retrieve the content of a paper. Set 'mode' as 'full' for the full paper, or 'abstract' for the abstract.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=get_paper_metadata,
         description="Retrieve the metadata of a paper, including its title, authors, year and url.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=update_paper_collection,
         description="This function updates the collection of papers under a specified name.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=update_paper_collection,
         description='''Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (The format should be comma-separated, with ranges indicated by a dash, e.g., "1, 3-5") from the source collection.''',
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=retrieve_papers,
         description="Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=search_papers,
         description="Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ), 
     StructuredTool.from_function(
         func=recommend_similar_papers,
         description="Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=query_area_papers,
         description="Query a large collection of papers (based on their abstracts) to find an answer to a specific query.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=query_individual_papers,
         description="Query a collection of papers (based on their full texts) to find an answer to a specific query.",
-        callbacks=[HumanApprovalCallbackHandler()]
+        callbacks=callbacks
     ),
 ]
 
@@ -156,8 +159,13 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
+<<<<<<< HEAD
         print(self.template.format(**kwargs))
         # import pdb; pdb.set_trace()
+=======
+        #print(self.template.format(**kwargs))
+        
+>>>>>>> 64b7597c69ec4a8e99fd778679b28dd70fe5e470
         return self.template.format(**kwargs)
 
 
@@ -244,8 +252,13 @@ if __name__ == "__main__":
     try:
         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
+<<<<<<< HEAD
         ans = agent_executor.run('I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
         # import pdb; pdb.set_trace()
+=======
+        ans = agent_executor.run('what is Numerical Question Answering?') # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
+        #import pdb; pdb.set_trace()
+>>>>>>> 64b7597c69ec4a8e99fd778679b28dd70fe5e470
         
     finally:
         

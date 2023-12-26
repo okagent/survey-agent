@@ -5,3 +5,6 @@ __pycache__
 secret_key.txt
 *.log
 config.json
+data/
+.langchain.db
+output.txt
