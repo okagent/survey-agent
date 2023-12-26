@@ -9,14 +9,22 @@ import random
 
 import numpy as np
 from sklearn import svm
-
+import datetime
 import string
 
 uid = 'test_user' 
 
 RET_NUM = 25
 
-paper_meta = {k:{"_time": convert_to_timestamp(v["published_date"])} for k, v in paper_corpus.items()}
+print("="*10 + f"准备开始 - 时间4.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+
+# paper_meta = {k:{"_time": convert_to_timestamp(v["published_date"])} for k, v in paper_corpus.items()}
+paper_meta = {
+    k: {"_time": convert_to_timestamp(v["published_date"]) if v["published_date"] != '' else None}
+    for k, v in paper_corpus.items()
+}
+
+print("="*10 + f"准备开始 - 时间4.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 def search_rank(q: str = ''):
     if not q:
@@ -91,10 +99,14 @@ def svm_rank(uid, tags: str = '', pid: str = '', C: float = 0.01):
     return paper_titles, scores, words
 
 def time_rank():
-    ms = sorted(paper_meta.items(), key=lambda kv: kv[1]['_time'], reverse=True)
+    ms = sorted(paper_meta.items(), key=lambda kv: (kv[1]['_time'] is not None, kv[1]['_time']), reverse=True)
     tnow = time.time()
     paper_titles = [k for k, v in ms]
-    scores = [(tnow - v['_time'])/60/60/24 for k, v in ms] # time delta in days
+    # scores = [(tnow - v['_time'])/60/60/24 for k, v in ms] # time delta in days
+    scores = [
+        (tnow - v['_time']) / 60 / 60 / 24 if v['_time'] is not None else float('inf')
+        for k, v in ms
+    ]
     return paper_titles, scores
 
 def random_rank():
@@ -135,7 +147,7 @@ def _call_arxiv_sanity_search(uid, rank='time', tags='', pid='', time_filter='',
         kv = {k:v for k,v in paper_meta.items()} # read all of metas to memory at once, for efficiency
         tnow = time.time()
         deltat = int(time_filter)*60*60*24 # allowed time delta in seconds
-        keep = [i for i, pid in enumerate(paper_titles) if (tnow - kv[pid]['_time']) < deltat]
+        keep = [i for i, pid in enumerate(paper_titles) if kv[pid]['_time'] is not None and (tnow - kv[pid]['_time']) < deltat]
         paper_titles, scores = [paper_titles[i] for i in keep], [scores[i] for i in keep]
 
     # optionally hide papers we already have
