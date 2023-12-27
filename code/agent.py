@@ -117,6 +117,7 @@ You shoulde use tools for paper retrieval, paper collection management, paper re
 
 {tools}
 
+For single parameter input, please input directly; for multiple parameter input, please use dict format to input.
 Use the following format:
 
 Query: the input query for which you must provide a natural language answer
@@ -270,13 +271,12 @@ if __name__ == "__main__":
     from utils import DualOutput
     import datetime
     sys.stdout = DualOutput('output.txt')
-
-
     
     query = input("Please enter your query: ")
     while query.lower()!='stop':
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+            import pdb; pdb.set_trace()
             response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )

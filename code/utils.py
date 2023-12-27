@@ -18,8 +18,6 @@ config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.j
 with open(config_path, 'r') as f:
     config = json.load(f)
 
-
-
 logger = logging.getLogger(__name__)
 
 file_handler = logging.FileHandler('log.log', encoding='utf-8')
