@@ -229,6 +229,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 # set up chat history 
 chat_history_dict = _sync_chat_history()
 
+from utils import DualOutput
+sys.stdout = DualOutput('output.log')
+
 def run_agent(query, uid=None, session_id=None):
     chat_history = chat_history_dict.get((uid, session_id), [])
 
@@ -268,7 +271,6 @@ agent_executor = initialize_agent(
 
 if __name__ == "__main__":
     import sys
-    from utils import DualOutput
     import datetime
     sys.stdout = DualOutput('output.txt')
     

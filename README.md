@@ -16,7 +16,7 @@ uvicorn server:app --host 0.0.0.0 --port 8132
 
 The frontend will send request to the 8132 port, so make sure not to change the port number.
 
-You can run the following command to find the process occupying port number 8132, and kill it afterwards.
+You can run the following command to find the process occupying port number 8132 (may require sudo to see it), and kill it afterwards.
 ```
 lsof -i :8132
 ```
