@@ -13,7 +13,7 @@ ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
 uid = 'test_user' 
 
 # load paper_corpus.json
-paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
+paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus_old.pkl') 
 
 import json
 import time
@@ -64,19 +64,7 @@ else:
 
 print("="*10 + f"准备开始 - 时间3.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-
-
-def _sync_paper_collections(paper_collections=None):
-    """Synchronize/Load paper collections with the database."""
-
-    paper_collections_path = '../data/paper_collections.json'
-    if paper_collections:
-        with open(paper_collections_path, 'w') as f:
-            json.dump(paper_collections, f)
-    else:
-        with open(paper_collections_path, 'r') as f:
-            paper_collections = json.load(f)
-    return paper_collections
+from utils import _sync_paper_collections
 
 # load paper collections data
 paper_collections = _sync_paper_collections()

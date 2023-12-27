@@ -159,6 +159,7 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
+        
         return self.template.format(**kwargs)
 
 
@@ -219,11 +220,17 @@ agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent, tools=tools, verbose=True, return_intermediate_steps=True
 )
 
+from utils import _sync_chat_history
+# set up chat history 
+chat_history_dict = _sync_chat_history()
+
 def run_agent(query):
     output = agent_executor.invoke(query)
     print(output)
     response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
     ans = output['output'].split("Final Answer:")[-1].strip()
+    
+
     # relevant_info = ... @shiwei
 
     return response, ans

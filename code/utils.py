@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 # Load config 
 config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
+
 with open(config_path, 'r') as f:
     config = json.load(f)
 
@@ -124,3 +125,27 @@ def open_atomic(filepath, *args, **kwargs):
 
 def convert_to_timestamp(time_str: str):
     return time.mktime(datetime.datetime.strptime(time_str, "%Y-%m-%d").timetuple())
+
+def _sync_file(path, obj=None):
+    if obj:
+        # save
+        safe_pickle_dump(obj, path)
+    else:
+        # load
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                obj = json.load(f)
+        else:
+            obj = {}
+    return obj 
+
+
+def _sync_paper_collections(paper_collections=None):
+    """Synchronize/Load paper collections with the database."""
+    paper_collections_path = '../data/paper_collections.pkl'
+    return _sync_file(paper_collections_path, paper_collections)
+
+def _sync_chat_history(chat_history_dict=None):
+    """Synchronize/Load chat history"""
+    chat_history_path = '../data/chat_history.pkl'
+    return _sync_file(chat_history_path, chat_history_dict)
