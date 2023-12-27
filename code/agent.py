@@ -21,7 +21,7 @@ set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 # Build our agent
 import re
 import json
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from langchain.agents import (
     AgentExecutor,
@@ -148,6 +148,8 @@ class CustomPromptTemplate(StringPromptTemplate):
         # Get the intermediate steps (AgentAction, Observation tuples)
         # Format them in a particular way
         intermediate_steps = kwargs.pop("intermediate_steps")
+        chat_history = kwargs.pop("chat_history")
+        
         thoughts = ""
         for action, observation in intermediate_steps:
             thoughts += action.log
@@ -170,7 +172,7 @@ prompt = CustomPromptTemplate(
     tools=tools,
     # This omits the `agent_scratchpad`, `tools`, and `tool_names` variables because those are generated dynamically
     # This includes the `intermediate_steps` variable because that is needed
-    input_variables=["input", "intermediate_steps"],
+    input_variables=["input", "intermediate_steps", "chat_history"],
 )
 
 # Output parser
@@ -244,7 +246,6 @@ def run_agent(query, uid=None, session_id=None):
     chat_history_dict[(uid, session_id)] = chat_history
     _sync_chat_history(chat_history_dict)
 
-    
     return response, ans
 
 '''
