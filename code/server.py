@@ -16,9 +16,15 @@ class Message(BaseModel):
     content: str
 
 
+class ConversationInfo(BaseModel):
+    conversationId: str
+    userId: str
+
+
 class GenerateArgs(BaseModel):
     messages: List[Message]
     stream: bool = False
+    conversationInfo: ConversationInfo = None
 
 
 def prettify_response(text):
@@ -54,9 +60,10 @@ def generate(args: GenerateArgs):
         asyncio.set_event_loop(loop)
         question = args.messages[-1].content
 
+        print("conversationInfo", args.conversationInfo)
+
         generated_text, ans = run_agent(question)
         prettified_text = prettify_response(generated_text)
-        print(prettified_text)
 
         yield "data:" + json.dumps(
             {
