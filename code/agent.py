@@ -229,6 +229,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 chat_history_dict = _sync_chat_history()
 
 from utils import DualOutput
+import sys
 sys.stdout = DualOutput('output.log')
 
 def run_agent(query, uid=None, session_id=None):
@@ -269,7 +270,6 @@ agent_executor = initialize_agent(
 
 
 if __name__ == "__main__":
-    import sys
     import datetime
 
     query = input("Please enter your query: ")
