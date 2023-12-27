@@ -138,6 +138,7 @@ Question: {input}
 # Prompts
 ## Set up a prompt template
 class CustomPromptTemplate(StringPromptTemplate):
+    
     # The template to use
     template: str
     # The list of tools available
@@ -204,7 +205,7 @@ output_parser = CustomOutputParser()
 # Specify the LLM model
 from langchain.chat_models import ChatOpenAI
 
-llm = ChatOpenAI(model_name="gpt-4", temperature=0)
+llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
 
 #Agent and agent executor
 # LLM chain consisting of the LLM and a prompt
@@ -221,18 +222,29 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 from utils import _sync_chat_history
+from langchain_core.messages import AIMessage, HumanMessage
 # set up chat history 
 chat_history_dict = _sync_chat_history()
 
-def run_agent(query):
-    output = agent_executor.invoke(query)
-    print(output)
+def run_agent(query, uid=None, session_id=None):
+    chat_history = chat_history_dict.get((uid, session_id), [])
+
+    output = agent_executor.invoke({"input": query, "chat_history": chat_history})
+
     response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
     ans = output['output'].split("Final Answer:")[-1].strip()
-    
 
     # relevant_info = ... @shiwei
+    chat_history.extend(
+        [
+            HumanMessage(content=query),
+            AIMessage(content=response),
+        ]
+    )
+    chat_history_dict[(uid, session_id)] = chat_history
+    _sync_chat_history(chat_history_dict)
 
+    
     return response, ans
 
 '''
@@ -258,17 +270,13 @@ if __name__ == "__main__":
     import datetime
     sys.stdout = DualOutput('output.txt')
 
-    # Run the agent
-    #query = 'I have the following three documents: 1) MAmmoTH: Building Math Generalist Models through Hybrid Instruction Tuning,2) ToRA: A Tool-Integrated Reasoning Agent for Mathematical Problem Solving,3) MathCoder Seamless Code Integration in LLMs for Enhanced Mathematical Reasoning. Save the above documents as a group named "Mathematical Reasoning"' 
 
-    # query = 'what is numerical question answering?'
     
     query = input("Please enter your query: ")
     while query.lower()!='stop':
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            response, ans = run_agent(query) # call retrieve_papers, good. However, need the implementation of 'query_individual papers' to complete.
-            # import pdb; pdb.set_trace()
+            response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
         query = input("Please enter your query: ")

@@ -133,8 +133,8 @@ def _sync_file(path, obj=None):
     else:
         # load
         if os.path.exists(path):
-            with open(path, 'r') as f:
-                obj = json.load(f)
+            with open(path, 'rb') as f:
+                obj = pickle.load(f)
         else:
             obj = {}
     return obj 
