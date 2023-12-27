@@ -62,7 +62,11 @@ def generate(args: GenerateArgs):
 
         print("conversationInfo", args.conversationInfo)
 
-        generated_text, ans = run_agent(question)
+        generated_text, ans = run_agent(
+            question,
+            uid=args.conversationInfo.userId,
+            session_id=args.conversationInfo.conversationId,
+        )
         prettified_text = prettify_response(generated_text)
 
         yield "data:" + json.dumps(
