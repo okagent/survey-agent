@@ -60,12 +60,12 @@ def generate(args: GenerateArgs):
         asyncio.set_event_loop(loop)
         question = args.messages[-1].content
 
-        print("conversationInfo", args.conversationInfo)
-
         generated_text, ans = run_agent(
             question,
-            uid=args.conversationInfo.userId,
-            session_id=args.conversationInfo.conversationId,
+            uid=args.conversationInfo.userId if args.conversationInfo else "test_user",
+            session_id=args.conversationInfo.conversationId
+            if args.conversationInfo
+            else None,
         )
         prettified_text = prettify_response(generated_text)
 
