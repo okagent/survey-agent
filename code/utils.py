@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 # Load config 
 config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
+# import pdb; pdb.set_trace()
 with open(config_path, 'r') as f:
     config = json.load(f)
 
