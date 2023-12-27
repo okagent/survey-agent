@@ -31,7 +31,7 @@ def merge_chunk_responses(responses, question):
         # return merged_response
         pass
 
-def query_area_papers(paper_list_name: str, question: str, uid=uid) -> str:
+def query_area_papers(paper_list_name: str, question: str) -> str:
     """
     Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
 
@@ -94,7 +94,7 @@ def query_area_papers(paper_list_name: str, question: str, uid=uid) -> str:
 
     return answer_and_source
 
-def query_individual_papers(paper_list_name, query, uid=uid):
+def query_individual_papers(paper_list_name, query):
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 
@@ -149,9 +149,9 @@ os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 if __name__ == '__main__':
     uid = 'test_user'   
-    res = query_area_papers(paper_list_name='123 asd Papers', question='summarize this papers', uid=uid)
+    res = query_area_papers(paper_list_name='123 asd Papers', question='summarize this papers')
     print(res)
     
     
-    res = query_individual_papers(paper_list_name='123 asd Papers', query='summarize this papers', uid=uid)
+    res = query_individual_papers(paper_list_name='123 asd Papers', query='summarize this papers')
     print(res)
