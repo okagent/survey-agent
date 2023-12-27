@@ -270,9 +270,7 @@ agent_executor = initialize_agent(
 
 
 if __name__ == "__main__":
-    import sys
     import datetime
-    sys.stdout = DualOutput('output.txt')
     
     query = input("Please enter your query: ")
     while query.lower()!='stop':
