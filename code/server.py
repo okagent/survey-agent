@@ -21,6 +21,32 @@ class GenerateArgs(BaseModel):
     stream: bool = False
 
 
+def prettify_response(text):
+    prettified_text = ""
+    for line in text.split("\n"):
+        if line.startswith("Thought:"):
+            prettified_text += "<p style='color:#065f46'>" + line + "</p>"
+        elif line.startswith("Action:"):
+            prettified_text += "<p style='color:#b91c1c'>" + line + "</p>"
+        elif line.startswith("Action Input:"):
+            prettified_text += "<p style='color:#4338ca'>" + line + "</p>"
+        elif line.startswith("Observation:"):
+            observation = line.split("Observation:")[1].strip()
+            try:
+                observation = eval(eval(observation))
+                prettified_text += (
+                    "<p style='color:#92400e'>Observation:</p>\n\n```json\n"
+                    + json.dumps(observation, indent=4)
+                    + "\n```\n\n"
+                )
+            except:
+                prettified_text += "<p style='color:#92400e'>" + line + "</p>"
+        else:
+            prettified_text += line
+        prettified_text += "\n"
+    return prettified_text
+
+
 @app.post("/chat/generate")
 def generate(args: GenerateArgs):
     def run_model():
@@ -29,11 +55,13 @@ def generate(args: GenerateArgs):
         question = args.messages[-1].content
 
         generated_text, ans = run_agent(question)
+        prettified_text = prettify_response(generated_text)
+        print(prettified_text)
 
         yield "data:" + json.dumps(
             {
                 "token": {"id": -1, "text": "", "special": False, "logprob": 0},
-                "generated_text": generated_text,
+                "generated_text": prettified_text,
                 "details": None,
             }
         ) + "\n"
