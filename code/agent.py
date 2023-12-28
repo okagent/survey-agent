@@ -230,6 +230,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 chat_history_dict = _sync_chat_history()
 
 from utils import DualOutput
+import sys
 sys.stdout = DualOutput('output.log')
 
 def run_agent(query, uid=None, session_id=None):
@@ -273,7 +274,7 @@ if __name__ == "__main__":
     import datetime
     
     query = input("Please enter your query: ")
-    while query.lower()!='stop':
+    while 'stop' in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
             import pdb; pdb.set_trace()
