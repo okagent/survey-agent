@@ -82,7 +82,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
     for i,j in zip(res,chunk_list):
         if "yes" in i.lower():
             leave={}
-            leave['source_content'] = j[1]
+            #leave['source_content'] = j[1]
             leave['source_paper'] = j[0]
             answer_and_source.append(leave)
             query_chunk_prompts.append(query_chunk.format(chunk=j[1], question=question))
@@ -135,7 +135,7 @@ def query_individual_papers(paper_list_name, query):
     leave = {
         "answer": res,
         "source_paper": source_list,
-        "source_content": whole_paper_content
+        #"source_content": whole_paper_content
     }
     answer_with_source.append(leave)
 
