@@ -1,5 +1,5 @@
 import pickle
-from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus, paper_collections
+from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus, paper_collections, _get_collection_papers, _get_paper_content
 from feature_func import load_features
 from utils import convert_to_timestamp, json2string
 
@@ -178,14 +178,29 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     if search_type == 'search':
         request = {'rank': 'search', 'q': search_query, 'time_filter': time_filter}
     elif search_type == 'recommend':
-        request = {'rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': 'yes'}
+        request = {'rank': 'tags', 'tags': f'{uid}-{search_query}', 'time_filter': time_filter, 'skip_have': 'yes'}
     
     # 需要维护paper_collections和arxiv-sanity-lite后端的tags一致
 
     found_papers = _call_arxiv_sanity_search(uid=uid, **request)
+    
+    if search_type == 'recommendation':
+        # 用GPT-4对abstract再过滤一次
 
-    # placeholder: 随便返回一些paper
-    # found_papers = random.sample(paper_corpus.keys(), 3)
+        # 获取用户输入论文的abstract
+        source_collection = search_query
+        source_collection_papers = _get_collection_papers(source_collection, uid)
+        source_paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in source_collection_papers]
+
+        # 获取推荐论文的abstract
+        target_paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in found_papers]
+
+        # 让GPT-4过滤一遍推荐论文。如果GPT-4认为某篇论文不相关，就把它从found_papers里删掉。
+        # sanity-check，要确保GPT-4推荐的论文名称和原名称一致。可以再用_get_papers_by_name对齐到原论文。
+        pass
+
+
+
 
 
     # Define the search result as a paper collection
