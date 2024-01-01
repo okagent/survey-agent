@@ -129,7 +129,7 @@ def read_chunked_papers(paper_list_name: str, question: str, content_type="abstr
 
     return answer_for_agent
 
-def read_whole_papers(paper_list_name, query,  content_type="abstract", model_type="small"):
+def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="small"):
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 
@@ -196,17 +196,18 @@ def _query_papers(paper_list_name, query, uid, content_type, model_type="small",
     try:
         #
         if chunk:
-            res = read_chunked_papers(paper_list_name, query, content_type, model_type)
+            res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
         else:
-            res = read_whole_papers(paper_list_name, query, content_type, model_type)
+            res = read_whole_papers(paper_list_name, query, uid, content_type, model_type)
     except:
         print("try to read whole paper failed, retry to read chunked papers...")
-        res = read_chunked_papers(paper_list_name, query, content_type, model_type)
+        res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
     return res
             
 
 if __name__ == '__main__':
     uid = 'test_user'   
-    res = _query_papers(paper_list_name='What is persona in language model applications?', query='summarize these papers', uid=uid, content_type="full")
+    res = _query_papers(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
+    # res = _query_papers(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
     print(res)
     
