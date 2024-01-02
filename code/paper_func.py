@@ -208,8 +208,12 @@ def _define_paper_collection(found_papers, paper_collection_name, uid):
 def _get_papercollection_by_name(collection_name, uid):
     """Find the name of the paper collection that best matches a fuzzy collection name."""
     # Find the closest match for the collection name
-   
-    match = difflib.get_close_matches(collection_name, paper_collections[uid].keys(), n=1, cutoff=0.7)
+    
+    paper_collection_name_simplified = {p.replace('search results of ', '').replace('recommend results of ', ''): p for p in paper_collections[uid].keys()}
+    match = difflib.get_close_matches(collection_name, paper_collection_name_simplified.keys(), n=1, cutoff=0.7)
+
+    match = [paper_collection_name_simplified[m] for m in match]
+    
     if match:
         return match[0]
     else:    
