@@ -8,7 +8,7 @@ from utils import logger, json2string
 
 uid = 'test_user' 
 
-ANSWER_FILE="../data/query_full_answer.json"
+ANSWER_FILE="/data/survey_agent/query_full_answer.json"
 
 def merge_chunk_responses(responses, question, model_type="small"):    
     
