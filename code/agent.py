@@ -274,10 +274,10 @@ if __name__ == "__main__":
     import datetime
     
     query = input("Please enter your query: ")
-    while 'stop' in query.lower():
+    while 'stop' not in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )

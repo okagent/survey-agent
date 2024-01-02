@@ -117,14 +117,15 @@ def query_individual_papers(paper_list_name, query):
     
     
     #Assume we can read all the papers at once using long-context model
-            
+    def _filter_full_text(full_text):
+        full_text = full_text[:full_text.find('REFERENCES')]
+        return full_text
             
     whole_paper_content = ""
     source_list = []
     for paper in paper_contents:
-        whole_paper_content = whole_paper_content+paper['content']+"\n\n\n"
+        whole_paper_content = whole_paper_content+_filter_full_text(paper['content'])+"\n\n\n"
         source_list.append(paper["source"])
-        
         
     f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
     query_paper = f.read()

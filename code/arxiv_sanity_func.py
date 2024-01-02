@@ -2,10 +2,12 @@ import pickle
 from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus, paper_collections, _get_collection_papers, _get_paper_content
 from feature_func import load_features
 from utils import convert_to_timestamp, json2string
+from llm_tools import *
 
 import os
 import time
 import random
+import ast
 
 import numpy as np
 from sklearn import svm
@@ -68,6 +70,7 @@ def svm_rank(uid, tags: str = '', pid: str = '', C: float = 0.01):
         y[ptoi[pid]] = 1.0
     elif tags:
         tags_filter_to = paper_collections[uid].keys() if tags == 'all' else set(tags.split(','))
+        # import pdb; pdb.set_trace()
         for tag, paper_titles in paper_collections[uid].items():
             if tag in tags_filter_to:
                 for pid in paper_titles:
@@ -178,31 +181,37 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     if search_type == 'search':
         request = {'rank': 'search', 'q': search_query, 'time_filter': time_filter}
     elif search_type == 'recommend':
-        request = {'rank': 'tags', 'tags': f'{uid}-{search_query}', 'time_filter': time_filter, 'skip_have': 'yes'}
+        request = {'rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': 'yes'}
     
     # 需要维护paper_collections和arxiv-sanity-lite后端的tags一致
 
     found_papers = _call_arxiv_sanity_search(uid=uid, **request)
     
-    if search_type == 'recommendation':
+    if search_type == 'recommend':
+        # import pdb; pdb.set_trace()
         # 用GPT-4对abstract再过滤一次
 
         # 获取用户输入论文的abstract
         source_collection = search_query
         source_collection_papers = _get_collection_papers(source_collection, uid)
         source_paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in source_collection_papers]
+        source_paper = ''.join([str(i+1)+'. '+source_paper_contents[i]['source'].replace('\'','\\\'')+'\n'+source_paper_contents[i]['content'].replace('\'','\\\'')+'\n\n' for i in range(len(source_paper_contents))])
 
         # 获取推荐论文的abstract
         target_paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in found_papers]
-
+        target_paper = ''.join([str(i+1)+'. '+target_paper_contents[i]['source'].replace('\'','\\\'')+'\n'+target_paper_contents[i]['content'].replace('\'','\\\'')+'\n\n' for i in range(len(target_paper_contents))])
         # 让GPT-4过滤一遍推荐论文。如果GPT-4认为某篇论文不相关，就把它从found_papers里删掉。
         # sanity-check，要确保GPT-4推荐的论文名称和原名称一致。可以再用_get_papers_by_name对齐到原论文。
-        pass
 
-
-
-
-
+        f = open(f"../prompts/gpt4filter_for_recommendation.txt", "r")
+        gpt4filter = f.read()
+        prompt = gpt4filter.format(original_paper=source_paper, target_paper=target_paper)
+        dissimilar = gpt_4_predict(prompt)
+        dissimilar = dissimilar[dissimilar.find('['):dissimilar.find(']')+1]
+        dissimilar = ast.literal_eval(dissimilar)
+        
+        found_papers = [paper for paper in found_papers if paper not in dissimilar]
+        
     # Define the search result as a paper collection
     
     random_str = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(5))
