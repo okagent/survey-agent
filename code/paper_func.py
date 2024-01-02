@@ -13,7 +13,7 @@ ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
 uid = 'test_user' 
 
 # load paper_corpus.json
-paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus_old.pkl') 
+paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
 
 import json
 import time
