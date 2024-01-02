@@ -67,7 +67,7 @@ def svm_rank(uid, tags: str = '', pid: str = '', C: float = 0.01):
     if pid:
         y[ptoi[pid]] = 1.0
     elif tags:
-        tags_filter_to = paper_collections[uid].keys() if tags == 'all' else set(tags.split(','))
+        tags_filter_to = paper_collections[uid].keys() if tags == 'all' else set(tags.split('|||'))
         for tag, paper_titles in paper_collections[uid].items():
             if tag in tags_filter_to:
                 for pid in paper_titles:
@@ -178,7 +178,7 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     if search_type == 'search':
         request = {'rank': 'search', 'q': search_query, 'time_filter': time_filter}
     elif search_type == 'recommend':
-        request = {'rank': 'tags', 'tags': f'{uid}-{search_query}', 'time_filter': time_filter, 'skip_have': 'yes'}
+        request = {'rank': 'tags', 'tags': search_query, 'time_filter': time_filter, 'skip_have': 'yes'}
     
     # 需要维护paper_collections和arxiv-sanity-lite后端的tags一致
 
@@ -206,7 +206,7 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
     # Define the search result as a paper collection
     
     random_str = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(5))
-    paper_collection_name = f'<{random_str}, {search_type} results of "{search_query}">'
+    paper_collection_name = f'<{random_str} | {search_type} results of "{search_query}">'
     _define_paper_collection(found_papers, paper_collection_name, uid)
 
     return _display_papers(found_papers, paper_collection_name)
@@ -228,6 +228,7 @@ def search_papers(query: str, time_filter: str = '') -> str:
 def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str:
     """
     Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.
+    This function also suppoers recommending papers based on multiple paper collections, in which case you should separate the collection names by a special token ||| .
 
     Args:
         uid (str): The user id.
@@ -247,9 +248,9 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str
 if __name__ == '__main__':
     uid = 'test_user'  
 
-    print('Recommend Papers: \n', recommend_similar_papers('Paper Collection 123'))
+    #print('Recommend Papers: \n', recommend_similar_papers('Paper Collection 123'))
 
-    print('Search Papers: \n', search_papers('persona of LLMs'))
+    #print('Search Papers: \n', search_papers('persona of LLMs'))
 
     print('Recommend Papers: \n', recommend_similar_papers('persona of LLMs'))
     # Sorry, we cannot find the paper collection you are looking for.
