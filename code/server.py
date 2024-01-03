@@ -67,6 +67,9 @@ def generate(args: GenerateArgs):
             if args.conversationInfo
             else None,
         )
+        # fetch 'leave' if it exists @shiwei
+        pass 
+
         prettified_text = prettify_response(generated_text)
 
         yield "data:" + json.dumps(

@@ -37,7 +37,7 @@ from paper_func import get_papers_and_define_collections, get_papercollection_by
 print("="*10 + f"准备开始 - 时间4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from arxiv_sanity_func import search_papers, recommend_similar_papers
 print("="*10 + f"准备开始 - 时间5: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-from query_func import query_area_papers, query_individual_papers 
+from query_func import query_based_on_paper_collection
 print("="*10 + f"准备开始 - 时间6: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from langchain.tools import StructuredTool
 from langchain.callbacks import HumanApprovalCallbackHandler
@@ -59,8 +59,8 @@ tools = [
     ),
     StructuredTool.from_function(
         func=get_papercollection_by_name,
-        description='''Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers. 
-        When the user's request pertains to inquiring about a research field, this action has a higher priority than search_papers. That is, the agent should first check if there is an existing paper collection related to the research area. If not, then the agent should proceed to find papers using the search_papers function.''',
+        description='''Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers. Only use this function when the user explicitly asks for information about the collection. Avoid using this when the user poses a request about the collection, in which case the agent should use 'query_based_on_paper_collection' instead.
+        ''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
@@ -98,6 +98,20 @@ tools = [
         callbacks=callbacks
     ),
     StructuredTool.from_function(
+        func=query_based_on_paper_collection,
+        description="""
+        When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
+        Note that:
+        1. 'content_type' denotes which part of the papers would be used to answer the query. Choose from "abstract", "intro" or "full" for the abstract, introduction or the full text of the papers respectively.
+        2. 'model_type' denotes which kinds of LLMs would be used to answer the query. Use "large" by default to use gpt-4, or use "small" for smaller open-source models if specified by the user.
+        3. 'chunk' denotes applying the 'chunk-and-merge' algorithm. Set it as False by default unless it is specified by the user. 
+        4. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.""",
+        callbacks=callbacks
+    ),
+]
+
+'''
+StructuredTool.from_function(
         func=query_area_papers,
         description="Query a large collection of papers (based on their abstracts) to find an answer to a specific query. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.",
         callbacks=callbacks
@@ -106,8 +120,8 @@ tools = [
         func=query_individual_papers,
         description="Query a collection of papers (based on their full texts) to find an answer to a specific query. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.",
         callbacks=callbacks
-    ),
-]
+    )
+'''
 
 
 
@@ -129,9 +143,9 @@ Thought: you should always think about what to do, step by step
 Action: the action to take, should be one of [{tool_names}]
 Action Input: the input to the action
 Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
+... (this Thought/Action/Action Input/Observation can repeat N times.)
 Thought: I now know the final answer
-Final Answer: the final answer to the original input question
+Final Answer: the final answer to the original input question (do not repeat large blocks of content that is present in the Observation.)
 
 Question: {input}
 {agent_scratchpad}

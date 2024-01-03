@@ -54,9 +54,9 @@ def save_answer(query, full_response):
         json.dump(data, file)
     
     
-def read_chunked_papers(paper_list_name: str, question: str, content_type="abstract", model_type="small") -> str:
+def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="abstract", model_type="small") -> str:
     """
-    Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
+    Query a large collection of papers (based on their abstracts) to find an answer to a specific query. 
 
     Args:
         paper_list_name (str): The name of the paper collection.
@@ -192,8 +192,23 @@ import os
 os.environ["https_proxy"]="http://127.0.0.1:7890"
 os.environ["http_proxy"]="http://127.0.0.1:7890"
 
-def _query_papers(paper_list_name, query, uid, content_type, model_type="small", chunk=False ):
-    # content type: ["abstract", "intro", "full"]
+def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk=False) -> str:
+    """
+    When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
+    Note that:
+    1. 'content_type' denotes which part of the papers would be used to answer the query. Choose from "abstract", "intro" or "full" for the abstract, introduction or the full text of the papers respectively.
+    2. 'model_type' denotes which kinds of LLMs would be used to answer the query. Use "large" by default to use gpt-4, or use "small" for smaller open-source models if specified by the user.
+    3. 'chunk' denotes applying the 'chunk-and-merge' algorithm. Set it as False by default unless it is specified by the user. 
+    4. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.
+
+    Args:
+        paper_list_name (str): The name of the paper collection.
+        query (str): The query to be queried.
+        content_type (str): Which part of the papers should be used to answer the query. Choose from "abstract", "intro", "full". 
+        model_type (str): The LLM used to answer the query. Choose from "large" (for gpt-4) and "small" for smaller open-source language models. 
+    Returns:
+        str: A string representing a list of tuples containing the answer, the source paragraph, and the source paper.
+    """
     
     #try to follow instructions
     try:
@@ -321,7 +336,7 @@ def query_individual_papers(paper_list_name, query):
 
 if __name__ == '__main__':
     uid = 'test_user'   
-    res = _query_papers(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
-    # res = _query_papers(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
+    res = query_paper_collections(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
+    # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
     print(res)
     
