@@ -281,10 +281,9 @@ agent_executor = initialize_agent(
 
 if __name__ == "__main__":
     import datetime
-    sys.stdout = DualOutput('output.txt')
     
     query = input("Please enter your query: ")
-    while query.lower()!='stop':
+    while 'stop' not in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
             

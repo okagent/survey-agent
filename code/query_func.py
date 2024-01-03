@@ -153,13 +153,16 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     paper_contents = [ {'content':_get_paper_content(paper_name, content_type), 'source': paper_name} for paper_name in collection_papers]
     
     
-    #Assume we can read all the papers at once using long-context model     
+    #Assume we can read all the papers at once using long-context model
+    def _filter_full_text(full_text):
+        full_text = full_text[:full_text.find('REFERENCES')]
+        return full_text        
+            
     whole_paper_content = ""
     source_list = []
     for paper in paper_contents:
-        whole_paper_content = whole_paper_content+paper['content']+"\n\n\n"
+        whole_paper_content = whole_paper_content+_filter_full_text(paper['content'])+"\n\n\n"
         source_list.append(paper["source"])
-        
         
     f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
     query_paper = f.read()

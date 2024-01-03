@@ -1,0 +1,11 @@
+We have found a similar paper collection to the original paper collection. Please filter out items that are not similar to the original collection of papers based on the abstract.
+
+Original paper: 
+
+{original_paper}
+
+Target paper: 
+
+{target_paper}
+
+Only returns a python-list of dissimilar article titles.
