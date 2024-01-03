@@ -83,6 +83,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
         for c in chunks:
             chunk_list.append((p["source"],c))
 
+
     #check for relevant chunks => paper name and paragraph content
     f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
     check_for_related = f.read()
@@ -170,6 +171,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
 
     prompt = query_paper.format(paper=whole_paper_content, question=query)
 
+
     if "small" in model_type:
         res = small_model_predict([prompt])[0]
     else:
@@ -222,121 +224,22 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
         res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
     return res
 
-def query_area_papers(paper_list_name: str, question: str) -> str:
-    """
-    Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
-    If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.
 
-    Args:
-        paper_list_name (str): The name of the paper collection.
-        query (str): The query to be answered.
 
-    Returns:
-        str: A string representing a list of dictionaries containing the answer, the source paragraph, and the source paper.
-    """
 
-    paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
-    if paper_list_name == COLLECTION_NOT_FOUND_INFO:
-        return COLLECTION_NOT_FOUND_INFO
-    
-    collection_papers = _get_collection_papers(paper_list_name, uid)
-
-    paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in collection_papers]
-    
-    # ....
-
-    # call _display_papers to display the reference information
-    # reference_info = _display_papers(...)
-
-    # chunk the large collection of papers into chunks
-    chunk_list=[]
-    for p in paper_contents:
-        content = p['content']
-        chunks = get_chunks(content) # Generally, one abstract in one chunk
-        for c in chunks:
-            chunk_list.append((p["source"],c))
-
-    #check for relevant chunks => paper name and paragraph content
-    f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
-    check_for_related = f.read()
-    prompts=[]
-    for d in chunk_list:
-        prompts.append(check_for_related.format(title=d[0], content=d[1], question=question))
-    res = gpt_4_predict(query_chunk_prompts)# small_model_predict(prompts)
-
-    #parse for references, answers
-    answer_and_source=[]
-    f = open(f"/data/survey_agent/prompts/collect_answer_from_chunk.txt", "r")
-    query_chunk = f.read()
-    query_chunk_prompts=[]
-    
-    #Only return related chunks
-    for i,j in zip(res,chunk_list):
-        if "yes" in i.lower():
-            leave={}
-            #leave['source_content'] = j[1]
-            leave['source_paper'] = j[0]
-            answer_and_source.append(leave)
-            query_chunk_prompts.append(query_chunk.format(chunk=j[1], question=question))
-    answers = gpt_4_predict(query_chunk_prompts)# small_model_predict(query_chunk_prompts)
-    for i,j in zip(answers, answer_and_source):
-        j['answer'] = i
-
-    #merge for final complete answer if needed
-
-    return answer_and_source
-
-def query_individual_papers(paper_list_name, query):
-    """
-    Queries a small collection of papers (based on their full text) to find an answer to a specific query.
-    If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.
-
-    Args:
-        paper_list_name (str): The name of the paper collection.
-        query (str): The query to be queried.
-
-    Returns:
-        str: A string representing a list of tuples containing the answer, the source paragraph, and the source paper.
-    """
-
-    paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
-    if paper_list_name == COLLECTION_NOT_FOUND_INFO:
-        return COLLECTION_NOT_FOUND_INFO
-    
-    collection_papers = _get_collection_papers(paper_list_name, uid)
-
-    #Get the full context of the paper
-    paper_contents = [ {'content':_get_paper_content(paper_name, 'full'), 'source': paper_name} for paper_name in collection_papers]
-    
-    
-    #Assume we can read all the papers at once using long-context model
-            
-            
-    whole_paper_content = ""
-    source_list = []
-    for paper in paper_contents:
-        whole_paper_content = whole_paper_content+paper['content']+"\n\n\n"
-        source_list.append(paper["source"])
-        
-        
-    f = open(f"/data/survey_agent/prompts/collect_answer_from_whole_paper.txt", "r")
-    query_paper = f.read()
-    answer_with_source=[]
-
-    prompt = query_paper.format(paper=whole_paper_content, question=query)
-    res = gpt_4_predict(prompt)
-    leave = {
-        "answer": res,
-        "source_paper": source_list,
-        #"source_content": whole_paper_content
-    }
-    answer_with_source.append(leave)
-
-    return answer_with_source
 
 if __name__ == '__main__':
+    # Set API key
+    import os
+    os.environ.update({"OPENAI_API_KEY": config["openai_apikey"]})
+    import openai
+    openai.api_key = config["openai_apikey"]
+    print(os.environ["OPENAI_API_KEY"])
+
     uid = 'test_user'   
-    res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
+    res = query_based_on_paper_collection(paper_list_name='role_playing_ai_collection', query='summarize the collection', content_type='full')
+
+    #res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
     # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
     print(res)
     

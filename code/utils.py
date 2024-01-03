@@ -112,6 +112,8 @@ def open_atomic(filepath, *args, **kwargs):
     """
     fsync = kwargs.pop('fsync', False)
 
+    original_permissions = os.stat(filepath).st_mode if os.path.exists(filepath) else None 
+
     with _tempfile(dir=os.path.dirname(filepath)) as tmppath:
         with open(tmppath, *args, **kwargs) as f:
             yield f
@@ -119,6 +121,8 @@ def open_atomic(filepath, *args, **kwargs):
                 f.flush()
                 os.fsync(f.fileno())
         os.rename(tmppath, filepath)
+        if original_permissions is not None:
+            os.chmod(filepath, original_permissions)
 
 def convert_to_timestamp(time_str: str):
     return time.mktime(datetime.datetime.strptime(time_str, "%Y-%m-%d").timetuple())
