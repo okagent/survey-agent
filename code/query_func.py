@@ -336,7 +336,7 @@ def query_individual_papers(paper_list_name, query):
 
 if __name__ == '__main__':
     uid = 'test_user'   
-    res = query_paper_collections(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
+    res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
     # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
     print(res)
     
