@@ -59,7 +59,8 @@ tools = [
     ),
     StructuredTool.from_function(
         func=get_papercollection_by_name,
-        description="Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers.",
+        description='''Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers. 
+        When the user's request pertains to inquiring about a research field, this action has a higher priority than search_papers. That is, the agent should first check if there is an existing paper collection related to the research area. If not, then the agent should proceed to find papers using the search_papers function.''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
@@ -98,12 +99,12 @@ tools = [
     ),
     StructuredTool.from_function(
         func=query_area_papers,
-        description="Query a large collection of papers (based on their abstracts) to find an answer to a specific query.",
+        description="Query a large collection of papers (based on their abstracts) to find an answer to a specific query. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.",
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=query_individual_papers,
-        description="Query a collection of papers (based on their full texts) to find an answer to a specific query.",
+        description="Query a collection of papers (based on their full texts) to find an answer to a specific query. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.",
         callbacks=callbacks
     ),
 ]

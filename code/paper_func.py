@@ -230,6 +230,7 @@ def _get_collection_papers(collection_name, uid):
 def get_papercollection_by_name(collection_name: str) -> str:
     """
     Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers.
+    When the user's request pertains to inquiring about a research field, this action has a higher priority than search_papers. That is, the agent should first check if there is an existing paper collection related to the research area. If not, then the agent should proceed to find papers using the search_papers function.
 
     Args:
         collection_name (str): The name of the paper collection.

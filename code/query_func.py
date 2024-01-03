@@ -12,7 +12,7 @@ ANSWER_FILE="/data/survey_agent/query_full_answer.json"
 
 def merge_chunk_responses(responses, question, model_type="small"):    
     
-        # f = open(f"../prompts/merge_answer.txt", "r")
+        # f = open(f"/data/survey_agent/prompts/merge_answer.txt", "r")
         # all_res = responses
         # merge_template = f.read()
         # res_l=0
@@ -84,7 +84,7 @@ def read_chunked_papers(paper_list_name: str, question: str, content_type="abstr
             chunk_list.append((p["source"],c))
 
     #check for relevant chunks => paper name and paragraph content
-    f = open(f"../prompts/check_for_related.txt", "r")
+    f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
     check_for_related = f.read()
     prompts=[]
     for d in chunk_list:
@@ -95,7 +95,7 @@ def read_chunked_papers(paper_list_name: str, question: str, content_type="abstr
 
     #parse for references, answers
     answer_and_source=[]
-    f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
+    f = open(f"/data/survey_agent/prompts/collect_answer_from_chunk.txt", "r")
     query_chunk = f.read()
     query_chunk_prompts=[]
     
@@ -164,7 +164,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
         whole_paper_content = whole_paper_content+_filter_full_text(paper['content'])+"\n\n\n"
         source_list.append(paper["source"])
         
-    f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
+    f = open(f"/data/survey_agent/prompts/collect_answer_from_whole_paper.txt", "r")
     query_paper = f.read()
     answer_with_source=[]
 
@@ -210,6 +210,7 @@ def _query_papers(paper_list_name, query, uid, content_type, model_type="small",
 def query_area_papers(paper_list_name: str, question: str) -> str:
     """
     Query a large collection of papers (based on their abstracts) to find an answer to a specific query.
+    If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.
 
     Args:
         paper_list_name (str): The name of the paper collection.
@@ -241,7 +242,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
             chunk_list.append((p["source"],c))
 
     #check for relevant chunks => paper name and paragraph content
-    f = open(f"../prompts/check_for_related.txt", "r")
+    f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
     check_for_related = f.read()
     prompts=[]
     for d in chunk_list:
@@ -250,7 +251,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
 
     #parse for references, answers
     answer_and_source=[]
-    f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
+    f = open(f"/data/survey_agent/prompts/collect_answer_from_chunk.txt", "r")
     query_chunk = f.read()
     query_chunk_prompts=[]
     
@@ -273,6 +274,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
 def query_individual_papers(paper_list_name, query):
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
+    If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.
 
     Args:
         paper_list_name (str): The name of the paper collection.
@@ -302,7 +304,7 @@ def query_individual_papers(paper_list_name, query):
         source_list.append(paper["source"])
         
         
-    f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
+    f = open(f"/data/survey_agent/prompts/collect_answer_from_whole_paper.txt", "r")
     query_paper = f.read()
     answer_with_source=[]
 
