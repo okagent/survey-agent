@@ -247,7 +247,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
     prompts=[]
     for d in chunk_list:
         prompts.append(check_for_related.format(title=d[0], content=d[1], question=question))
-    res = small_model_predict(prompts)
+    res = gpt_4_predict(query_chunk_prompts)# small_model_predict(prompts)
 
     #parse for references, answers
     answer_and_source=[]
@@ -263,7 +263,7 @@ def query_area_papers(paper_list_name: str, question: str) -> str:
             leave['source_paper'] = j[0]
             answer_and_source.append(leave)
             query_chunk_prompts.append(query_chunk.format(chunk=j[1], question=question))
-    answers = small_model_predict(query_chunk_prompts)
+    answers = gpt_4_predict(query_chunk_prompts)# small_model_predict(query_chunk_prompts)
     for i,j in zip(answers, answer_and_source):
         j['answer'] = i
 
