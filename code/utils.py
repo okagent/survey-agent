@@ -39,7 +39,7 @@ import sys
 
 class DualOutput:
     def __init__(self, filename):
-        self.file = open(filename, 'w')
+        self.file = open(filename, 'a')
         self.stdout = sys.stdout
 
     def write(self, text):

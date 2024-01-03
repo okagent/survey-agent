@@ -13,7 +13,7 @@ ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
 uid = 'test_user' 
 
 # load paper_corpus.json
-paper_pickle_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
+paper_pickle_path = '/data/survey_agent/paper_corpus.pkl' #os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
 
 import json
 import time
@@ -29,6 +29,7 @@ import os
 print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 if not os.path.exists(paper_pickle_path):
+    
     paper_corpus_path='/data/survey_agent/processed_data'
     paper_corpus_json = []
     for filename in os.listdir(paper_corpus_path):
