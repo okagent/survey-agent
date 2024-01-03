@@ -50,7 +50,11 @@ callbacks = [] #[HumanApprovalCallbackHandler()]
 tools = [
     StructuredTool.from_function(
         func=get_papers_and_define_collections,
-        description="This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name.",
+        description='''This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name.
+        Note that:
+            1. If certain papers are not found, do not attempt to use the search_papers function again to look for those papers. 
+            2. Only use this function when the user inputs a list of papar titles. Do not use it without explicit intention from the user.
+        ''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
@@ -70,27 +74,26 @@ tools = [
     ),
     StructuredTool.from_function(
         func=update_paper_collection,
-        description="This function updates the collection of papers under a specified name.",
-        callbacks=callbacks
-    ),
-    StructuredTool.from_function(
-        func=update_paper_collection,
-        description='''Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (The format should be comma-separated, with ranges indicated by a dash, e.g., "1, 3-5") from the source collection.''',
+        description='''Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (Indices start from 0. The format should be comma-separated, with ranges indicated by a dash, e.g., "0, 2-4") from the source collection.''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=retrieve_papers,
-        description="Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content.",
+        description="Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. This function should be used when the query is about a specific statement, rather than being composed of keywords.",
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=search_papers,
-        description="Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.",
+        description='''Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.
+        The query should consist of keywords rather than a complete paper title. If the user's input seems like a paper title, the agent should use 'get_papers_and_define_collections'.''',
         callbacks=callbacks
     ), 
     StructuredTool.from_function(
         func=recommend_similar_papers,
-        description="Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.",
+        description='''Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.
+        Note that:
+        1. Only use this function when the user explicitly asks for recommendation.
+        ''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
@@ -236,7 +239,13 @@ sys.stdout = DualOutput('output.log')
 def run_agent(query, uid=None, session_id=None):
     chat_history = chat_history_dict.get((uid, session_id), [])
 
-    output = agent_executor.invoke({"input": query, "chat_history": chat_history})
+    try:
+        output = agent_executor.invoke({"input": query, "chat_history": chat_history})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("Error: ", e)
+        return e, e
 
     response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
     ans = output['output'].split("Final Answer:")[-1].strip()
@@ -278,7 +287,7 @@ if __name__ == "__main__":
     while query.lower()!='stop':
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            import pdb; pdb.set_trace()
+            
             response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )

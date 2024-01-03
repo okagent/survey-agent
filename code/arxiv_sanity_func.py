@@ -31,16 +31,20 @@ def search_rank(q: str = ''):
         return [], [] # no query? no results
     qs = q.lower().strip().split() # split query by spaces and lowercase
 
+
     match = lambda s: sum(min(3, s.lower().count(qp)) for qp in qs)
     matchu = lambda s: sum(int(s.lower().count(qp) > 0) for qp in qs)
     pairs = []
+    
     for pid, p in paper_corpus.items():
         score = 0.0
         score += 10.0 * matchu(' '.join(p['authors']))
         score += 20.0 * matchu(p['title'])
-        score += 1.0 * match(p['abstract'])
+        if p['abstract'] :
+            score += 1.0 * match(p['abstract'])
         if score > 0:
             pairs.append((score, pid))
+    
 
     pairs.sort(reverse=True)
     paper_titles = [p[1] for p in pairs]
@@ -73,6 +77,7 @@ def svm_rank(uid, tags: str = '', pid: str = '', C: float = 0.01):
                 for pid in paper_titles:
                     if pid in ptoi:
                         y[ptoi[pid]] = 1.0
+
 
     if y.sum() == 0:
         return [], [], [] # there are no positives?
@@ -214,7 +219,8 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
 
 def search_papers(query: str, time_filter: str = '') -> str:
     """
-    Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.
+    Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago. 
+    The query should consist of keywords rather than a complete paper title. If the user's input seems like a paper title, the agent should use 'get_papers_and_define_collections'.
 
     Args:
         query (str): The search query used to find relevant papers.
@@ -227,7 +233,10 @@ def search_papers(query: str, time_filter: str = '') -> str:
 
 def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str:
     """
-    Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.
+    Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago. 
+    Note that:
+        1. Only use this function when the user explicitly asks for recommendation.
+
     This function also suppoers recommending papers based on multiple paper collections, in which case you should separate the collection names by a special token ||| .
 
     Args:
@@ -248,11 +257,12 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str
 if __name__ == '__main__':
     uid = 'test_user'  
 
-    #print('Recommend Papers: \n', recommend_similar_papers('Paper Collection 123'))
+    print('Recommend Papers: \n', recommend_similar_papers('Mathematical Reasoning'))
 
     #print('Search Papers: \n', search_papers('persona of LLMs'))
 
     print('Recommend Papers: \n', recommend_similar_papers('persona of LLMs'))
+
     # Sorry, we cannot find the paper collection you are looking for.
     #print('Recommend Papers: \n', recommend_similar_papers('123 asd Papers'))
     

@@ -7,7 +7,7 @@ from paper_func import paper_corpus
 import numpy as np
 
 
-DATA_DIR = '../data'
+DATA_DIR = '/data/survey_agent/'
 
 """
 our "feature store" is currently just a pickle file, may want to consider hdf5 in the future
@@ -50,9 +50,14 @@ def compute_feature(num=20000, max_df=0.1, min_df=5, max_docs=-1):
 
         # yield the abstracts of the papers
         for p in keys:
+
             d = paper_corpus[p]
             author_str = ' '.join(d['authors'])
-            yield ' '.join([d['title'], d['abstract'], author_str])
+            if d['abstract']:
+                yield ' '.join([d['title'], d['abstract'], author_str])
+            else:
+                yield ' '.join([d['title'], '', author_str])
+            
 
     print("training tfidf vectors...")
     v.fit(make_corpus(training=True))

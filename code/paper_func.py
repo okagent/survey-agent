@@ -72,7 +72,10 @@ paper_collections = _sync_paper_collections()
 
 def get_papers_and_define_collections(paper_titles: List[str], paper_collection_name: str) -> str:
     """
-    This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name.
+    This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name. 
+    Note that:
+        1. If certain papers are not found, do not attempt to use the search_papers function again to look for those papers. 
+        2. Only use this function when the user inputs a list of papar titles. Do not use it without explicit intention from the user.
 
     Args:
         paper_titles (List[str]): A list of paper titles to be searched in the database.
@@ -248,13 +251,12 @@ def get_papercollection_by_name(collection_name: str) -> str:
 
 def update_paper_collection(target_collection_name: str, source_collection_name: str, paper_indexes: str, action: str) -> bool:
     """
-    Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (The format should be comma-separated, with ranges indicated by a dash, e.g., "1, 3-5") from the source collection.
+    Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (Indices start from 0. The format should be comma-separated, with ranges indicated by a dash, e.g., "0, 2-4") from the source collection.
 
     Args:
         target_collection_name (str): The name of the target collection to be updated.
         source_collection_name (str): The name of the source collection where papers will be taken from.
-        paper_indexes (str): A string representing the indices of papers in the source collection to be used in the action. 
-                             The format should be comma-separated, with ranges indicated by a dash (e.g., "1,3-5").
+        paper_indexes (str): A string representing the indices of papers in the source collection to be used in the action. Indices start from 0. The format should be comma-separated, with ranges indicated by a dash (e.g., "0, 2-4").
         action (str): The action to perform - either "add" to add papers to the target collection or "del" to delete them.
 
     Returns:
@@ -318,7 +320,7 @@ def _retrieve_papers(query):
     
 def retrieve_papers(query: str) -> str:
     """
-    Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. 
+    Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. This function should be used when the query is about a specific statement, rather than being composed of keywords.
 
     Args:
         query (str): The search query used to find the most relevant paper.
