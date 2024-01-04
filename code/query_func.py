@@ -130,6 +130,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     return answer_for_agent
 
 def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="small"):
+    # import pdb; pdb.set_trace()
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 
@@ -193,6 +194,7 @@ os.environ["https_proxy"]="http://127.0.0.1:7890"
 os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk=False) -> str:
+    # import pdb; pdb.set_trace()
     """
     When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
     Note that:
