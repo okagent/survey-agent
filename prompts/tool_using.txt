@@ -5,10 +5,10 @@ Query: Find some papers related to <a certain field>.
 Steps: Using \"get_papercollection_by_name\" to find if there is already a collection for this field. If not, using \"search_papers\" to find related papers.
 
 Query: Summarize the papers related to <field>.
-Steps: Using \"get_papercollection_by_name\" to find if there is already a collection for this field. If not, using \"search_papers\" to find related papers and using \"get_papers_and_define_collections\" define a collection. Then, using \"query_based_on_paper_collection\" to summarize.
+Steps: Using \"get_papercollection_by_name\" to find if there is already a collection for this field. If not, using \"search_papers\" to find related papers. Then, using \"query_based_on_paper_collection\" to summarize.
 
 Query: Which paper proves <certain conclusion>.
-Steps: Using \"retrieve_papers\" find paper about the conclusion. Using \"get_papers_and_define_collections\" define the collection. Then, using \"query_based_on_paper_collection\" find answer.
+Steps: Using \"retrieve_papers\" find paper about the conclusion. Then, using \"query_based_on_paper_collection\" find answer.
 
 Query: Please summarize this <paper collection> and write a summary.
 Steps: Using \"query_based_on_paper_collection\" to answer.
