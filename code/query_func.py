@@ -170,7 +170,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     query_paper = f.read()
     answer_with_source=[]
 
-    prompt = query_paper.format(paper=whole_paper_content, question=query)
+    prompt = query_paper.format(paper_collection_content=whole_paper_content,question=query)
 
 
     if "small" in model_type:
@@ -189,6 +189,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     save_answer(query, [leave])
     
     return answer_for_agent
+
 
 #Assume use on 130 or 135, you should connect to the huggingface
 import os
@@ -225,10 +226,6 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
         print("try to read whole paper failed, retry to read chunked papers...")
         res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
     return res
-
-
-
-
 
 if __name__ == '__main__':
     # Set API key
