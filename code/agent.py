@@ -147,7 +147,7 @@ Use the following format:
 Query: the input query for which you must provide a natural language answer
 Thought: you should always think about what to do, step by step
 Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action, in compact json format.
+Action Input: the input to the action. For boolean parameters, use lowercase (true / false). 
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times.)
 Thought: I now know the final answer
