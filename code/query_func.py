@@ -237,7 +237,7 @@ if __name__ == '__main__':
     print(os.environ["OPENAI_API_KEY"])
 
     uid = 'test_user'   
-    res = query_based_on_paper_collection(paper_list_name='role_playing_ai_collection', query='summarize the collection', content_type='full')
+    res = query_based_on_paper_collection(paper_list_name='role_playing_ai_collection', query='summarize these papers, write a latex survey in 1000 words', content_type='full')
 
     #res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
     # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
