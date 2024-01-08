@@ -196,8 +196,13 @@ import os
 os.environ["https_proxy"]="http://127.0.0.1:7890"
 os.environ["http_proxy"]="http://127.0.0.1:7890"
 
-def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk=False) -> str:
-    # import pdb; pdb.set_trace()
+def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk: bool = False) -> str:
+
+    if chunk.lower() == 'false':
+        chunk = False
+    elif chunk.lower() == 'true':
+        chunk = True
+
     """
     When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
     Note that:
