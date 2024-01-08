@@ -131,6 +131,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     return answer_for_agent
 
 def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="small"):
+    # import pdb; pdb.set_trace()
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 
@@ -169,7 +170,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     query_paper = f.read()
     answer_with_source=[]
 
-    prompt = query_paper.format(paper=whole_paper_content, question=query)
+    prompt = query_paper.format(paper_collection_content=whole_paper_content,question=query)
 
 
     if "small" in model_type:
@@ -189,12 +190,14 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     
     return answer_for_agent
 
+
 #Assume use on 130 or 135, you should connect to the huggingface
 import os
 os.environ["https_proxy"]="http://127.0.0.1:7890"
 os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk=False) -> str:
+    # import pdb; pdb.set_trace()
     """
     When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
     Note that:
@@ -223,10 +226,6 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
         print("try to read whole paper failed, retry to read chunked papers...")
         res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
     return res
-
-
-
-
 
 if __name__ == '__main__':
     # Set API key

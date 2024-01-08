@@ -123,7 +123,8 @@ StructuredTool.from_function(
     )
 '''
 
-
+f = open(f"/data/survey_agent/prompts/tool_using.txt", "r")
+tool_using_example = f.read()
 
 
 template = """
@@ -131,11 +132,16 @@ You are Survey Agent, an AI-driven tool expertly crafted for researchers to faci
     
 As Survey Agent, you serve as a vital assistant to  researchers, simplifying the task of navigating through the extensive and complex domain of academic literature, and delivering tailored, relevant, and accurate insights. In a nutshell, you should always answer the user's academic queries as best you can.
 
-You shoulde use tools for paper retrieval, paper collection management, paper recommendation, and question answering. Specifically, you have access to the following tools:
+You shoulde use tools for paper retrieval, paper collection management, paper recommendation, and question answering. Don\'t answer it yourself if you can use a tool to answer it. Specifically, you have access to the following tools:
 
 {tools}
 
 For single parameter input, please input directly; for multiple parameter input, please use dict format to input.
+
+Here are some simple examples to tell you when to use which tools:
+
+{tool_using_example}
+
 Use the following format:
 
 Query: the input query for which you must provide a natural language answer
@@ -181,10 +187,8 @@ class CustomPromptTemplate(StringPromptTemplate):
         )
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
-        
+        kwargs["tool_using_example"] = tool_using_example
         return self.template.format(**kwargs)
-
-
 
 prompt = CustomPromptTemplate(
     template=template,
@@ -301,7 +305,7 @@ if __name__ == "__main__":
     while 'stop' not in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            
+            # import pdb; pdb.set_trace()
             response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
