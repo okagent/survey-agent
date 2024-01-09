@@ -153,6 +153,8 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question (do not repeat large blocks of content that is present in the Observation.)
 
+{chat_history}
+
 Question: {input}
 {agent_scratchpad}
 """
@@ -168,12 +170,32 @@ class CustomPromptTemplate(StringPromptTemplate):
     template: str
     # The list of tools available
     tools: List[Tool]
+    
+    def _chat_history_input(self, chat_history):
+        windows_size = 6
+        chat_history_input = ''
+
+        if len(chat_history) <= windows_size:
+            for chat in chat_history:
+                if type(chat) == HumanMessage:
+                    chat_history_input += 'Query: ' + chat.content + '\n'
+                elif type(chat) == AIMessage:
+                    chat_history_input += chat.content[chat.content.find('Final Answer: '):] + '\n'
+        else:
+            for chat in chat_history[-windows_size:]:
+                if type(chat) == HumanMessage:
+                    chat_history_input += 'Query: ' + chat.content.replace('\n\n','\n').strip() + '\n'
+                elif type(chat) == AIMessage:
+                    chat_history_input += chat.content[chat.content.find('Final Answer: '):].replace('\n\n','\n').strip() + '\n'
+            
+        return chat_history_input
 
     def format(self, **kwargs) -> str:
         # Get the intermediate steps (AgentAction, Observation tuples)
         # Format them in a particular way
         intermediate_steps = kwargs.pop("intermediate_steps")
-        chat_history = kwargs.pop("chat_history")
+        # chat_history = kwargs.pop("chat_history")
+        kwargs["chat_history"] = self._chat_history_input(kwargs["chat_history"])
         
         thoughts = ""
         for action, observation in intermediate_steps:
@@ -232,7 +254,7 @@ from langchain.chat_models import ChatOpenAI
 
 llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
 
-#Agent and agent executor
+# Agent and agent executor
 # LLM chain consisting of the LLM and a prompt
 llm_chain = LLMChain(llm=llm, prompt=prompt)
 tool_names = [tool.name for tool in tools]
@@ -254,13 +276,14 @@ chat_history_dict = _sync_chat_history()
 from utils import DualOutput
 import sys
 sys.stdout = DualOutput('output.log')
+chat_history = []
 
 
 def run_agent(query, uid=None, session_id=None):
 
     
     chat_history = chat_history_dict.get((uid, session_id), [])
-
+    
     try:
         output = agent_executor.invoke({"input": query, "chat_history": chat_history})
     except Exception as e:
@@ -308,7 +331,7 @@ if __name__ == "__main__":
     while 'stop' not in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            # import pdb; pdb.set_trace()
+            import pdb; pdb.set_trace()
             response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
