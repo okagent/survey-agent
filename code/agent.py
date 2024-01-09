@@ -255,7 +255,10 @@ from utils import DualOutput
 import sys
 sys.stdout = DualOutput('output.log')
 
+
 def run_agent(query, uid=None, session_id=None):
+
+    
     chat_history = chat_history_dict.get((uid, session_id), [])
 
     try:

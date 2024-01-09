@@ -150,3 +150,8 @@ def _sync_chat_history(chat_history_dict=None):
     """Synchronize/Load chat history"""
     chat_history_path = '/data/survey_agent/chat_history.pkl'
     return _sync_file(chat_history_path, chat_history_dict)
+
+if __name__ == '__main__':
+    chat_history = _sync_chat_history()
+    
+    

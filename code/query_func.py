@@ -198,9 +198,9 @@ os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk: bool = False) -> str:
 
-    if chunk.lower() == 'false':
+    if chunk in ['false', 'False', 'FALSE']:
         chunk = False
-    elif chunk.lower() == 'true':
+    elif chunk in ['true', 'True', 'TRUE']:
         chunk = True
 
     """
