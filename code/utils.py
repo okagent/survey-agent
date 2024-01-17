@@ -18,6 +18,8 @@ config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.j
 with open(config_path, 'r') as f:
     config = json.load(f)
 
+
+
 logger = logging.getLogger(__name__)
 
 file_handler = logging.FileHandler('log.log', encoding='utf-8')
@@ -150,8 +152,171 @@ def _sync_chat_history(chat_history_dict=None):
     """Synchronize/Load chat history"""
     chat_history_path = '/data/survey_agent/chat_history.pkl'
     return _sync_file(chat_history_path, chat_history_dict)
+    
+cache_sign = True
 
-if __name__ == '__main__':
-    chat_history = _sync_chat_history()
-    
-    
+
+#openai.proxy = config['proxy']
+if config.get('proxy', None):
+	openai.proxy = config['proxy']
+
+if config.get('openai_apibase', None):
+	openai.api_base = config['openai_apibase']
+
+if config.get('gemini_apikey', None):
+	import google.generativeai as genai
+	genai.configure(api_key=config['gemini_apikey'])
+
+
+cache = None 
+def cached(func):
+	def wrapper(*args, **kwargs):		
+		global cache
+		cache_path = 'cache_gemini.pkl'
+		if cache == None:
+			if not os.path.exists(cache_path):
+				cache = {}
+			else:
+				cache = pickle.load(open(cache_path, 'rb'))  
+
+		key = ( func.__name__, str(args), str(kwargs.items()))
+		
+
+		if (cache_sign and key in cache and cache[key] not in [None, '[TOKEN LIMIT]']) :
+			return cache[key]
+		else:
+			result = func(*args, **kwargs)
+			if result != 'busy' and result != None:
+				cache[key] = result
+				pickle.dump(cache, open(cache_path, 'wb'))
+				#safe_pickle_dump(cache, cache_path)
+			return result
+
+	return wrapper
+
+def get_response(sys_prompt, inputs, model='gpt4', nth_generation=0):
+	model = model.lower().replace(' ', '')
+	if model.startswith('gpt-3.5'):
+		model = 'gpt-3.5-turbo-1106'
+		return get_response_gpt(sys_prompt, inputs, model, nth_generation=nth_generation)
+	elif model.startswith('gpt-4'):
+		model = 'gpt-4-1106-preview'
+		return get_response_gpt(sys_prompt, inputs, model, nth_generation=nth_generation)
+	elif model.startswith('gemini'):
+		model = 'gemini-pro'
+		return get_response_gemini(sys_prompt, inputs, model, nth_generation=nth_generation)
+
+if config.get('openai_apikey', None):
+    from openai import OpenAI
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=config['openai_apikey'],
+    )
+
+@cached 
+def get_response_gpt(sys_prompt, inputs, model='gpt-4', retry_count=0, nth_generation=0):
+
+	query = [ {'role': 'system', 'content': sys_prompt}]
+	if len(inputs) > 0:
+		query.append({'role': 'user', 'content': inputs})
+	
+	try:
+		temperature = 0.2 if nth_generation else 0 
+		logger.info('ChatGPT SysPrompt:  ' + sys_prompt[:100])
+		logger.info('ChatGPT Input:  ' + inputs[:100])
+		response = client.chat.completions.create(
+			model= model ,  # 对话模型的名称
+			messages=query,
+			temperature=temperature,  # 值在[0,1]之间，越大表示回复越具有不确定性
+			top_p=1,
+			frequency_penalty=0.0,  # [-2,2]之间，该值越大则更倾向于产生不同的内容
+			presence_penalty=0.0,  # [-2,2]之间，该值越大则更倾向于产生不同的内容,
+			timeout=60
+		)
+
+		logger.info('GPT Output: ' + response.choices[0].message.content[:100])
+		return response.choices[0].message.content
+
+	except openai.BadRequestError as e:
+		logger.exception(e)
+		
+		return '[TOKEN LIMIT]'
+
+	except Exception as e:
+		# unknown exception
+		logger.exception(e)
+
+		if retry_count < 2:
+			time.sleep(5)
+			logger.warn("[OPEN_AI] RateLimit exceed, 第{}次重试".format(retry_count+1))
+			return get_response_gpt(sys_prompt, inputs, model, retry_count+1, nth_generation) 
+
+		print(f'Fail to get response after {retry_count} retry')
+
+@cached 
+def get_response_gemini(sys_prompt, inputs, model='gemini-pro', retry_count=0, nth_generation=0):
+
+	try:
+		gemini_model = genai.GenerativeModel(model_name=model)
+
+		logger.info('Gemini SysPrompt:  ' + sys_prompt[:100])
+		logger.info('Gemini Input:  ' + inputs[:100])
+			
+
+		response = gemini_model.generate_content(sys_prompt + inputs, generation_config=genai.types.GenerationConfig(
+			candidate_count=1, 
+			temperature = 0.2 if nth_generation else 0,
+		))
+		
+		response = response.text
+		logger.info('Gemini Output: ' + response[:100])
+		return response
+
+	except Exception as e:
+		# unknown exception
+		logger.exception(e)
+
+		if retry_count < 2:
+			time.sleep(5)
+			logger.warn("[GEMINI_AI] RateLimit exceed, 第{}次重试".format(retry_count+1))
+			return get_response_gemini(sys_prompt, inputs, model, retry_count+1, nth_generation) 
+
+		print(f'Fail to get response after {retry_count} retry')
+
+def string2json(llm_response):
+	llm_response = llm_response.strip("`")
+	if llm_response.startswith('json'):
+		llm_response = llm_response[4:]
+	
+	try:
+		json_response = json.loads(llm_response)
+	except:
+		try:
+			llm_response = llm_response[llm_response.find("{"):]
+			json_response = json.loads(llm_response)
+		except:
+			return False
+	
+	return json_response
+
+
+def get_response_json(post_processing_func=string2json, **kwargs):
+	
+	nth_generation = 0
+
+	while (True):
+		response = get_response(**kwargs, nth_generation=nth_generation)
+		#print(f'{nth_generation} generation: {response[:100]}')
+		
+		json_response = post_processing_func(response)
+		#print(f'parse results: {json_response}')
+
+		if json_response:
+			break 
+		else:
+			nth_generation += 1
+			if nth_generation > 10:
+				import pdb; pdb.set_trace()
+			
+
+	return json_response
