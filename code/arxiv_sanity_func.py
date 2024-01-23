@@ -207,7 +207,10 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
         # 让GPT-4过滤一遍推荐论文。如果GPT-4认为某篇论文不相关，就把它从found_papers里删掉。
         # sanity-check，要确保GPT-4推荐的论文名称和原名称一致。可以再用_get_papers_by_name对齐到原论文。
 
-        f = open(f"/data/survey_agent/prompts/gpt4filter_for_recommendation.txt", "r")
+        # 135
+        # f = open(f"/data/survey_agent/prompts/gpt4filter_for_recommendation.txt", "r")
+        # 130
+        f = open(f"../prompts/gpt4filter_for_recommendation.txt", "r")
         gpt4filter = f.read()
         prompt = gpt4filter.format(original_paper=source_paper, target_paper=target_paper)
         dissimilar = gpt_4_predict(prompt)

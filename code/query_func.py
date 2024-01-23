@@ -8,7 +8,10 @@ from utils import logger, json2string
 
 uid = 'test_user' 
 
-ANSWER_FILE="/data/survey_agent/query_full_answer.json"
+# 135
+# ANSWER_FILE="/data/survey_agent/query_full_answer.json"
+# 130
+ANSWER_FILE="../data/query_full_answer.json"
 
 def merge_chunk_responses(responses, question, model_type="small"):    
     
@@ -85,7 +88,10 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
 
 
     #check for relevant chunks => paper name and paragraph content
-    f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
+    # 135
+    # f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
+    # 130
+    f = open(f"../prompts/check_for_related.txt", "r")
     check_for_related = f.read()
     prompts=[]
     for d in chunk_list:
@@ -96,7 +102,10 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
 
     #parse for references, answers
     answer_and_source=[]
-    f = open(f"/data/survey_agent/prompts/collect_answer_from_chunk.txt", "r")
+    # 135
+    # f = open(f"/data/survey_agent/prompts/collect_answer_from_chunk.txt", "r")
+    # 130
+    f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
     query_chunk = f.read()
     query_chunk_prompts=[]
     
@@ -165,8 +174,11 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     for paper in paper_contents:
         whole_paper_content = whole_paper_content+_filter_full_text(paper['content'])+"\n\n\n"
         source_list.append(paper["source"])
-        
-    f = open(f"/data/survey_agent/prompts/collect_answer_from_whole_paper.txt", "r")
+    
+    # 135
+    # f = open(f"/data/survey_agent/prompts/collect_answer_from_whole_paper.txt", "r")
+    # 130
+    f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
     query_paper = f.read()
     answer_with_source=[]
 
@@ -241,7 +253,7 @@ if __name__ == '__main__':
     print(os.environ["OPENAI_API_KEY"])
 
     uid = 'test_user'   
-    res = query_based_on_paper_collection(paper_list_name='role_playing_ai_collection', query='summarize these papers, write a latex survey in 1000 words', content_type='full')
+    res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query='summarize these papers, write a latex survey in 1000 words', content_type='full')
 
     #res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
     # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")

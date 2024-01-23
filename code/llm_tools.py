@@ -22,7 +22,7 @@ model_path_dict = {
 }
 
 model_url_dict = {
-    "mixtral": "http://10.176.40.135:8000/v1",
+    "mixtral": "http://localhost:8000/v1",
     "openchat-3.5": "http://localhost:18888/v1/chat/completions",  #Assume set up the model at local
     "mistral-0.2":"http://10.176.40.130:8301/v1",
     "vicuna-1.5":"http://10.176.40.130:8401/v1",
@@ -72,7 +72,10 @@ def small_model_predict(prompt_list, max_tokens=1024):
             else:
                 print("Error:", response.status_code, response.text)
         elif "mixtral" in model:
-            llm = ChatOpenAI(model='/home/huggingface_models/models--mistralai--Mixtral-8x7B-Instruct-v0.1/snapshots/e0bbb53cee412aba95f3b3fa4fc0265b1a0788b2', api_key='EMPTY', base_url=model_url_dict[model])
+            # 135
+            # llm = ChatOpenAI(model='/home/huggingface_models/models--mistralai--Mixtral-8x7B-Instruct-v0.1/snapshots/e0bbb53cee412aba95f3b3fa4fc0265b1a0788b2', api_key='EMPTY', base_url=model_url_dict[model])
+            # 130
+            llm = ChatOpenAI(model='/home/huggingface_models/models--mistralai--Mistral-7B-Instruct-v0.1/snapshots/7ad5799710574ba1c1d953eba3077af582f3a773', api_key='EMPTY', base_url=model_url_dict[model])
             messages = [HumanMessage(content=mess),]
             s = llm(messages)
             res_list.append(s.content)

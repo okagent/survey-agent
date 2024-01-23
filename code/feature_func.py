@@ -6,9 +6,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from paper_func import paper_corpus
 import numpy as np
 
-
-DATA_DIR = '/data/survey_agent/'
-
+# 135
+# DATA_DIR = '/data/survey_agent/'
+# 130
+DATA_DIR = '../data/'
 """
 our "feature store" is currently just a pickle file, may want to consider hdf5 in the future
 """

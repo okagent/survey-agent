@@ -122,8 +122,10 @@ StructuredTool.from_function(
         callbacks=callbacks
     )
 '''
-
-f = open(f"/data/survey_agent/prompts/tool_using.txt", "r")
+# 135
+# f = open(f"/data/survey_agent/prompts/tool_using.txt", "r")
+# 130
+f = open(f"../prompts/tool_using.txt", "r")
 tool_using_example = f.read()
 
 
@@ -331,7 +333,7 @@ if __name__ == "__main__":
     while 'stop' not in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             response, ans = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )

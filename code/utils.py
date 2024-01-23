@@ -145,12 +145,18 @@ def _sync_file(path, obj=None):
 
 def _sync_paper_collections(paper_collections=None):
     """Synchronize/Load paper collections with the database."""
-    paper_collections_path = '/data/survey_agent/paper_collections.pkl'
+    # 135
+    # paper_collections_path = '/data/survey_agent/paper_collections.pkl'
+    # 130
+    paper_collections_path = '../data/paper_collections.pkl'
     return _sync_file(paper_collections_path, paper_collections)
 
 def _sync_chat_history(chat_history_dict=None):
     """Synchronize/Load chat history"""
-    chat_history_path = '/data/survey_agent/chat_history.pkl'
+    # 135
+    # chat_history_path = '/data/survey_agent/chat_history.pkl'
+    # 130
+    chat_history_path = '../data/chat_history.pkl'
     return _sync_file(chat_history_path, chat_history_dict)
     
 cache_sign = True
