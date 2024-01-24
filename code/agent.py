@@ -5,11 +5,12 @@ from utils import config
 
 # Set API key
 import os
-os.environ.update({"OPENAI_API_KEY": config["openai_apikey"]})
-import openai
-openai.api_key = config["openai_apikey"]
-print(os.environ["OPENAI_API_KEY"])
-
+os.environ.update({"OPENAI_API_KEY": config["openai_apikey"],"GOOGLE_API_KEY": config["gemini_apikey"]})
+# import openai
+# openai.api_key = config["openai_apikey"]
+# print(os.environ["OPENAI_API_KEY"])
+print('openai key: {}'.format(os.environ["OPENAI_API_KEY"]))
+print('gemini key: {}'.format(os.environ["GOOGLE_API_KEY"]))
 
 # Set up cache for LLM
 print("="*10 + f"准备开始 - 时间2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
@@ -103,7 +104,7 @@ tools = [
         When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
         Note that:
         1. 'content_type' denotes which part of the papers would be used to answer the query. Choose from "abstract", "intro" or "full" for the abstract, introduction or the full text of the papers respectively.
-        2. 'model_type' denotes which kinds of LLMs would be used to answer the query. Use "large" by default to use gpt-4, or use "small" for smaller open-source models if specified by the user.
+        2. 'model_type' denotes which kinds of LLMs would be used to answer the query. Use "large" by default to use Gemini-pro, or use "small" for smaller open-source models if specified by the user.
         3. 'chunk' denotes applying the 'chunk-and-merge' algorithm. Set it as False by default unless it is specified by the user. 
         4. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.""",
         callbacks=callbacks
@@ -253,8 +254,10 @@ output_parser = CustomOutputParser()
 
 # Specify the LLM model
 from langchain.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
-llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
+# llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-pro")
 
 # Agent and agent executor
 # LLM chain consisting of the LLM and a prompt

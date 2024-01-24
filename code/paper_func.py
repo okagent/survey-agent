@@ -66,6 +66,7 @@ if not os.path.exists(paper_pickle_path):
 else:
     # and load it, would it be quicker? 72s -> 27s, 2.7x faster
     with open(paper_pickle_path, 'rb') as f:
+        # print('readin paper corpus')
         paper_corpus, paper_docs, retriever = pickle.load(f)
 
 print("="*10 + f"准备开始 - 时间3.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
@@ -217,10 +218,11 @@ def _define_paper_collection(found_papers, paper_collection_name, uid):
 def _get_papercollection_by_name(collection_name, uid):
     """Find the name of the paper collection that best matches a fuzzy collection name."""
     # Find the closest match for the collection name
-    
+    # import pdb; pdb.set_trace()
     paper_collection_name_simplified = {p.replace('search results of ', '').replace('recommend results of ', ''): p for p in paper_collections[uid].keys()}
     match = difflib.get_close_matches(collection_name.lower(), [ k.lower() for k in paper_collection_name_simplified.keys()], n=1, cutoff=0.7)
-
+    match = [m for m in paper_collection_name_simplified.keys() if m.lower() in match]
+    
     match = [paper_collection_name_simplified[m] for m in match]
     
     if match:

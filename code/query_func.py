@@ -122,7 +122,8 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     else:
         answers = []
         for mess in prompts:
-            answers.append(gpt_4_predict(mess))
+            # answers.append(gpt_4_predict(mess))
+            answers.append(gemini_predict(mess))
     
     answer_for_agent = []
     for i,j in zip(answers, answer_and_source):
@@ -148,7 +149,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
         paper_list_name (str): The name of the paper collection.
         query (str): The query to be queried.
         content_type (str): choosing from "abstract", "intro", "full".
-        model_type: either "small" or "large", "small" means local models, "large" means GPT-4
+        model_type: either "small" or "large", "small" means local models, "large" means GPT-4/Gemini
 
     Returns:
         str: A string representing a list of tuples containing the answer, the source paragraph, and the source paper.
@@ -188,7 +189,8 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     if "small" in model_type:
         res = small_model_predict([prompt])[0]
     else:
-        res = gpt_4_predict(prompt)
+        # res = gpt_4_predict(prompt)
+        res = gemini_predict(prompt)
         
     leave = {
         "answer": res,
@@ -219,7 +221,7 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
     When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
     Note that:
     1. 'content_type' denotes which part of the papers would be used to answer the query. Choose from "abstract", "intro" or "full" for the abstract, introduction or the full text of the papers respectively.
-    2. 'model_type' denotes which kinds of LLMs would be used to answer the query. Use "large" by default to use gpt-4, or use "small" for smaller open-source models if specified by the user.
+    2. 'model_type' denotes which kinds of LLMs would be used to answer the query. Use "large" by default to use gpt-4/gemini-pro, or use "small" for smaller open-source models if specified by the user.
     3. 'chunk' denotes applying the 'chunk-and-merge' algorithm. Set it as False by default unless it is specified by the user. 
     4. If the user-specified paper collection is not found, the agent should finish this round and wait for user instructions.
 
@@ -227,7 +229,7 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
         paper_list_name (str): The name of the paper collection.
         query (str): The query to be queried.
         content_type (str): Which part of the papers should be used to answer the query. Choose from "abstract", "intro", "full". 
-        model_type (str): The LLM used to answer the query. Choose from "large" (for gpt-4) and "small" for smaller open-source language models. 
+        model_type (str): The LLM used to answer the query. Choose from "large" (for gpt-4/gemini-pro) and "small" for smaller open-source language models. 
     Returns:
         str: A string representing a list of tuples containing the answer, the source paragraph, and the source paper.
     """

@@ -99,4 +99,8 @@ from langchain.chat_models import ChatOpenAI
 def gpt_4_predict(prompt):
     llm = ChatOpenAI(model_name="gpt-4-1106-preview")
     return llm.predict(prompt)
-    
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+def gemini_predict(prompt):
+    llm = ChatGoogleGenerativeAI(model="gemini-pro")
+    return llm.invoke(prompt)

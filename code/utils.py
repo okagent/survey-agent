@@ -200,7 +200,7 @@ def cached(func):
 
 	return wrapper
 
-def get_response(sys_prompt, inputs, model='gpt4', nth_generation=0):
+def get_response(sys_prompt, inputs, model='gemini', nth_generation=0):
 	model = model.lower().replace(' ', '')
 	if model.startswith('gpt-3.5'):
 		model = 'gpt-3.5-turbo-1106'

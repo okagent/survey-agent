@@ -210,10 +210,11 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
         # 135
         # f = open(f"/data/survey_agent/prompts/gpt4filter_for_recommendation.txt", "r")
         # 130
-        f = open(f"../prompts/gpt4filter_for_recommendation.txt", "r")
-        gpt4filter = f.read()
-        prompt = gpt4filter.format(original_paper=source_paper, target_paper=target_paper)
-        dissimilar = gpt_4_predict(prompt)
+        f = open(f"../prompts/filter_for_recommendation.txt", "r")
+        filter = f.read()
+        prompt = filter.format(original_paper=source_paper, target_paper=target_paper)
+        # dissimilar = gpt_4_predict(prompt)
+        dissimilar = gemini_predict(prompt)
         dissimilar = dissimilar[dissimilar.find('['):dissimilar.find(']')+1]
         dissimilar = ast.literal_eval(dissimilar)
         
