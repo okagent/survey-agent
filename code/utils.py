@@ -172,6 +172,7 @@ if config.get('openai_apibase', None):
 if config.get('gemini_apikey', None):
 	import google.generativeai as genai
 	genai.configure(api_key=config['gemini_apikey'])
+	print('gemini key: {}'.format(config['gemini_apikey']))
 
 
 cache = None 

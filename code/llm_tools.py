@@ -100,7 +100,14 @@ def gpt_4_predict(prompt):
     llm = ChatOpenAI(model_name="gpt-4-1106-preview")
     return llm.predict(prompt)
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+#from langchain_google_genai import ChatGoogleGenerativeAI
 def gemini_predict(prompt):
-    llm = ChatGoogleGenerativeAI(model="gemini-pro")
-    return llm.invoke(prompt)
+    #llm = ChatGoogleGenerativeAI(model="gemini-pro")
+    #return llm.invoke(prompt)
+
+    from utils import get_response_gemini
+    return get_response_gemini(sys_prompt='', user_prompt=prompt)
+
+
+if __name__ == '__main__':
+    print(gemini_predict('hello'))

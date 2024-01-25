@@ -156,7 +156,6 @@ def _get_papers_by_name(paper_titles):
     found_papers = []
     for fuzzy_name in paper_titles:
         matches = difflib.get_close_matches(fuzzy_name, paper_corpus.keys(), n=1, cutoff=0.8)
-        # 这个matches还挺慢的，@鑫凤 可不可以优化一下？
        
         if matches:
             found_papers.append(matches[0])

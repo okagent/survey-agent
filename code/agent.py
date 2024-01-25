@@ -256,8 +256,8 @@ output_parser = CustomOutputParser()
 from langchain.chat_models import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-# llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
-llm = ChatGoogleGenerativeAI(model="gemini-pro")
+llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
+#llm = ChatGoogleGenerativeAI(model="gemini-pro")
 
 # Agent and agent executor
 # LLM chain consisting of the LLM and a prompt
