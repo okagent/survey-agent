@@ -31,11 +31,8 @@ import os
 
 print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-if not os.path.exists(paper_pickle_path):
-    # 135
-    # paper_corpus_path='/data/survey_agent/processed_data'
-    # 130
-    paper_corpus_path='/home/cyh/yxf/survey_agent/pdf/extract_24_1_6'
+def load_paper_pickle(paper_pickle_path):
+    paper_corpus_path='/home/yxf/WIP/sva/pdf/extract_24_3_6'
     paper_corpus_json = []
     for filename in os.listdir(paper_corpus_path):
         file_path = os.path.join(paper_corpus_path, filename)
@@ -62,6 +59,12 @@ if not os.path.exists(paper_pickle_path):
     # save paper_corpus, paper_docs and retriever into one pkl file
     with open(paper_pickle_path, 'wb') as f:
         pickle.dump([paper_corpus, paper_docs, retriever], f)
+        
+if not os.path.exists(paper_pickle_path):
+    # 135
+    # paper_corpus_path='/data/survey_agent/processed_data'
+    # 130
+    load_paper_pickle(paper_pickle_path)
 
 else:
     # and load it, would it be quicker? 72s -> 27s, 2.7x faster
