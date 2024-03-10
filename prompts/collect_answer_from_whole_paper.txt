@@ -22,7 +22,7 @@ Your note should be meticulously structured into two main parts: Evidence and Re
       4. Show original sentences in the segment content. Do not give any explanation.
       
       - For Reasoning:
-      1. Analyze the question and any sub-questions, offering answers, interpretations, or any relevant commentary to deepen the understanding of the question in 1~2 sentences.
+      1. Analyze the question and any sub-questions, offering answers, interpretations, or any relevant commentary to deepen the understanding of the question.
 
 The note should be formatted in JSON as follows:
 {{
