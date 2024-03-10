@@ -10,15 +10,15 @@ Question:
 ---
 
 Your task:
-Based on the provided scientific article segment and a related question, write a note analyzing the segment's relevance to the question.
+Based on the provided scientific articles and a related question, write a note analyzing these papers' relevance to the question.
 
 Guidelines for Note-Writing:
 Your note should be meticulously structured into two main parts: Evidence and Reasoning, following these guidelines:
 
       - For Evidence:
-      1. Please accurately extract the sentence from the provided context, ensuring the integrity and fidelity of its content to the segment content.
+      1. Please accurately extract the sentence from the provided context, ensuring the integrity and fidelity of its content.
       2. Find content directly related to the question or part of the question. If there are sentences that directly answer the question, retain their original wording. Also include sentences that may be helpful, even if they cannot provide a direct answer.
-      3. If multiple parts of the segment are relevant to the question, include all pertinent sentences.
+      3. If multiple parts of the content are relevant to the question, include all pertinent sentences.
       4. Show original sentences in the segment content. Do not give any explanation.
       
       - For Reasoning:
