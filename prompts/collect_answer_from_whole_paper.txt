@@ -1,4 +1,4 @@
-You are provided with a collection of scientific article along with a question related to these papers.
+You are provided with a collection of scientific articles along with a question related to these papers.
 Paper collection content:
 {paper_collection_content}
 
