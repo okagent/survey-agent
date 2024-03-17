@@ -1,7 +1,7 @@
 import pickle
 from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus, paper_collections, _get_collection_papers, _get_paper_content
 from feature_func import load_features
-from utils import convert_to_timestamp, json2string
+from utils import convert_to_timestamp, json2string, config
 from llm_tools import *
 
 import os
@@ -210,11 +210,11 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
         # 135
         # f = open(f"/data/survey_agent/prompts/gpt4filter_for_recommendation.txt", "r")
         # 130
-        f = open(f"../prompts/filter_for_recommendation.txt", "r")
+        f = open(f"{config['data_path']}/prompts/filter_for_recommendation.txt", "r")
         filter = f.read()
         prompt = filter.format(original_paper=source_paper, target_paper=target_paper)
         # dissimilar = gpt_4_predict(prompt)
-        dissimilar = gemini_predict(prompt)
+        dissimilar = gpt_4_predict(prompt)
         dissimilar = dissimilar[dissimilar.find('['):dissimilar.find(']')+1]
         dissimilar = ast.literal_eval(dissimilar)
         

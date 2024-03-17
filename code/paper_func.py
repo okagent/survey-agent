@@ -1,6 +1,6 @@
 import difflib
 import random
-from utils import logger, json2string
+from utils import logger, json2string, config
 from typing import List
 import os
 import datetime
@@ -16,7 +16,7 @@ uid = 'test_user'
 # 135
 # paper_pickle_path = '/data/survey_agent/paper_corpus.pkl' #os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
 # 130
-paper_pickle_path = '../data/paper_corpus.pkl'
+paper_pickle_path = f"{config['data_path']}/data/paper_corpus.pkl"
 
 import json
 import time

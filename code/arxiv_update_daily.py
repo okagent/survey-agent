@@ -11,6 +11,8 @@ import re
 import os
 from paper_func import load_paper_pickle
 from feature_func import compute_feature
+from utils import config
+
 def validateTitle(title):
     # Correct the messy path format of the paper title
     rstr = r"[\/\\\:\*\?\"\<\>\|]"  # '/ \ : * ? " < > |'
@@ -138,7 +140,7 @@ def process_paper(url):
 
 if __name__ == "__main__":
     json_path = "/home/yxf/WIP/sva/pdf/extract_24_3_6"
-    paper_pickle_path = '../data/paper_corpus.pkl'
+    paper_pickle_path = f"{config['data_path']}/data/paper_corpus.pkl"
     get_papers_from_arxiv_api(json_path)
     load_paper_pickle(paper_pickle_path)
     compute_feature()

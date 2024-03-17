@@ -148,7 +148,7 @@ def _sync_paper_collections(paper_collections=None):
     # 135
     # paper_collections_path = '/data/survey_agent/paper_collections.pkl'
     # 130
-    paper_collections_path = '../data/paper_collections.pkl'
+    paper_collections_path = f"{config['data_path']}/data/paper_collections.pkl"
     return _sync_file(paper_collections_path, paper_collections)
 
 def _sync_chat_history(chat_history_dict=None):
@@ -156,7 +156,7 @@ def _sync_chat_history(chat_history_dict=None):
     # 135
     # chat_history_path = '/data/survey_agent/chat_history.pkl'
     # 130
-    chat_history_path = '../data/chat_history.pkl'
+    chat_history_path = f"{config['data_path']}/data/chat_history.pkl"
     return _sync_file(chat_history_path, chat_history_dict)
     
 cache_sign = True

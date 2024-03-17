@@ -4,14 +4,14 @@ from llm_tools import *
 from paper_func import _get_collection_papers
 from paper_func import _get_papercollection_by_name
 from paper_func import _get_paper_content
-from utils import logger, json2string
+from utils import logger, json2string, config
 
 uid = 'test_user' 
 
 # 135
 # ANSWER_FILE="/data/survey_agent/query_full_answer.json"
 # 130
-ANSWER_FILE="../data/query_full_answer.json"
+ANSWER_FILE=f"{config['data_path']}/data/query_full_answer.json"
 
 def merge_chunk_responses(responses, question, model_type="small"):    
     
@@ -91,7 +91,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     # 135
     # f = open(f"/data/survey_agent/prompts/check_for_related.txt", "r")
     # 130
-    f = open(f"../prompts/check_for_related.txt", "r")
+    f = open(f"{config['data_path']}/prompts/check_for_related.txt", "r")
     check_for_related = f.read()
     prompts=[]
     for d in chunk_list:
@@ -105,7 +105,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     # 135
     # f = open(f"/data/survey_agent/prompts/collect_answer_from_chunk.txt", "r")
     # 130
-    f = open(f"../prompts/collect_answer_from_chunk.txt", "r")
+    f = open(f"{config['data_path']}/prompts/collect_answer_from_chunk.txt", "r")
     query_chunk = f.read()
     query_chunk_prompts=[]
     
@@ -179,7 +179,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     # 135
     # f = open(f"/data/survey_agent/prompts/collect_answer_from_whole_paper.txt", "r")
     # 130
-    f = open(f"../prompts/collect_answer_from_whole_paper.txt", "r")
+    f = open(f"{config['data_path']}/prompts/collect_answer_from_whole_paper.txt", "r")
     query_paper = f.read()
     answer_with_source=[]
 

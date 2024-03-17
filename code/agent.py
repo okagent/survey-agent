@@ -129,7 +129,7 @@ StructuredTool.from_function(
 # 135
 # f = open(f"/data/survey_agent/prompts/tool_using.txt", "r")
 # 130
-f = open(f"../prompts/tool_using.txt", "r")
+f = open(f"{config['data_path']}/prompts/tool_using.txt", "r")
 tool_using_example = f.read()
 
 

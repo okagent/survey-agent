@@ -29,7 +29,10 @@ model_url_dict = {
     "chatglm3":"http://10.176.40.130:8501/v1", 
 }
 from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_path_dict[model])
+if model in model_path_dict:
+    tokenizer = AutoTokenizer.from_pretrained(model_path_dict[model])
+else:
+    tokenizer = None
 
 def get_chunks(story, separator = ". ", chunk_size=1000):
     
@@ -77,7 +80,10 @@ def small_model_predict(prompt_list, max_tokens=1024):
             # 130
             llm = ChatOpenAI(model='/home/huggingface_models/models--mistralai--Mistral-7B-Instruct-v0.1/snapshots/7ad5799710574ba1c1d953eba3077af582f3a773', api_key='EMPTY', base_url=model_url_dict[model])
             messages = [HumanMessage(content=mess),]
+            
             s = llm(messages)
+
+                
             res_list.append(s.content)
         else:
             chat = ChatOpenAI(openai_api_key="EMPTY", openai_api_base=model_url_dict[model])
