@@ -178,17 +178,25 @@ def _display_papers(paper_titles, paper_collection_name, user_inputs=None, paper
         # called by get_papers_and_define_collections, where there might be None in paper titles
         for paper_name, user_input_name in zip(paper_titles, user_inputs):
             if paper_name:
-                paper_info.append(_get_paper_metadata(paper_name))
-                paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
+                paper=_get_paper_metadata(paper_name)
+                if paper!=PAPER_NOT_FOUND_INFO:
+                    paper_info.append(paper)
+                    paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
+                else:
+                    paper_info.append({'title': user_input_name, 'status': PAPER_NOT_FOUND_INFO})
             else:
                 paper_info.append({'title': user_input_name, 'status': PAPER_NOT_FOUND_INFO})
     else:
         # called by other functions, where paper titles are all valid
         for i, paper_name in enumerate(paper_titles):
-            paper_info.append(_get_paper_metadata(paper_name))
-            paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
-            if paper_content:
-                paper_info[-1]['relevant content'] = paper_content[i].page_content
+            paper=_get_paper_metadata(paper_name)
+            if paper!=PAPER_NOT_FOUND_INFO:
+                paper_info.append(paper)
+                paper_info[-1]['authors'] = ', '.join(paper_info[-1]['authors'])
+                if paper_content:
+                    paper_info[-1]['relevant content'] = paper_content[i].page_content
+            else:
+                paper_info.append({'title': paper_name, 'status': PAPER_NOT_FOUND_INFO})
 
     return json2string({'Collection': paper_collection_name, 'Papers': paper_info})
 

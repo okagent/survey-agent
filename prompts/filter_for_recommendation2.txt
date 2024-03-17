@@ -1,0 +1,13 @@
+We have found a similar paper collection `Additional Found Paper` to the original paper collection `Original Paper`. Please return {max_num} most relevant papers IN `Additional Found Paper` about the domain {domain} and `Original Paper`.
+
+Original Paper: 
+```
+{original_paper}
+```
+
+Additional Found Paper: 
+```
+{target_paper}
+```
+
+ONLY returns a python-list of article titles.

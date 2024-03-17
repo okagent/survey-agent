@@ -1,11 +1,14 @@
-We have found a similar paper collection to the original paper collection. Please filter out items that are not similar to the original collection of papers based on the abstract.
+We have found a similar paper collection `Additional Found Paper` to the original paper collection `Original Paper`. Please give each paper IN `Additional Found Paper` a relevant score to the collection `Original Paper` of domain {domain}. Note you should take that user prefer NEW published paper than old into the consideration of relevant score 
 
-Original paper: 
-
+Original Paper: 
+```
 {original_paper}
+```
 
-Target paper: 
-
+Additional Found Paper: 
+```
 {target_paper}
+```
 
-Only returns a python-list of dissimilar article titles.
+Your output should be a python-list of tuple whose first item is paper title and second item is relevant score.
+ONLY return the parsable python-list.
