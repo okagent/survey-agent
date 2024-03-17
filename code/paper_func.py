@@ -32,7 +32,7 @@ import os
 print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 def load_paper_pickle(paper_pickle_path):
-    paper_corpus_path='/home/yxf/WIP/sva/pdf/extract_24_3_6'
+    paper_corpus_path= f"{config['data_path']}/data/raw_papers"#'/home/yxf/WIP/sva/pdf/extract_24_3_6'
     paper_corpus_json = []
     for filename in os.listdir(paper_corpus_path):
         file_path = os.path.join(paper_corpus_path, filename)
