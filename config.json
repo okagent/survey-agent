@@ -1,6 +1,12 @@
 {
+<<<<<<< HEAD
     "model_name": "gemini",
     "openai_apikey": "sk-",
     "gemini_apikey": "AI",
     "data_path": "/home/survey_agent/"
+=======
+    "model_name": "",
+    "openai_apikey": "",
+    "gemini_apikey": ""
+>>>>>>> 6eb63231fa72adc6f6d9f55ca8422c62b55782af
 }

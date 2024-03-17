@@ -34,11 +34,17 @@ if model in model_path_dict:
 else:
     tokenizer = None
 
-def get_chunks(story, separator = ". ", chunk_size=1000):
-    
-    text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
-        tokenizer=tokenizer, chunk_size=chunk_size, chunk_overlap=200, separator=separator,
-    )
+def get_chunks(story, separator = ". ", chunk_size=3000):
+    if "gpt" in model:
+        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
+            encoding_name="cl100k_base", chunk_size=chunk_size, chunk_overlap=200, separator=separator,
+        )
+    elif model in model_path_dict.keys():
+        text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
+            tokenizer=tokenizer, chunk_size=chunk_size, chunk_overlap=200, separator=separator,
+        )
+    else:
+        print(f"error: no tokenizer prepared for {model}")
     text_chunks = text_splitter.split_text(story)
     return text_chunks
 def num_tokens_from_string(string: str, encoding_name="cl100k_base") -> int:

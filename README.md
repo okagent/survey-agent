@@ -43,3 +43,9 @@ Write the model name in config file
 ### Use GPT 4
 You are supposed to export OPENAI_API_KEY="your_key" before use GPT-4 model
 
+### Update arXiv paper every week day
+```
+crontab -l
+# Add the following line
+0 10 * * 1-5 {work_dir}/survey_agent/code/arxiv_update.sh
+```
