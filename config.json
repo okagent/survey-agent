@@ -1,5 +1,6 @@
 {
-    "model_name": "mixtral",
+    "model_name": "gemini",
     "openai_apikey": "sk-",
-    "gemini_apikey": ""
+    "gemini_apikey": "AI",
+    "data_path": "/home/survey_agent/"
 }
