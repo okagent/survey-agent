@@ -207,8 +207,8 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
 
 #Assume use on 130 or 135, you should connect to the huggingface
 import os
-os.environ["https_proxy"]="http://127.0.0.1:7890"
-os.environ["http_proxy"]="http://127.0.0.1:7890"
+# os.environ["https_proxy"]="http://127.0.0.1:7890"
+# os.environ["http_proxy"]="http://127.0.0.1:7890"
 
 def query_based_on_paper_collection(paper_list_name, query,  content_type, model_type="large", chunk: bool = False) -> str:
 

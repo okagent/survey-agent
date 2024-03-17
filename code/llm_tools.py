@@ -17,7 +17,7 @@ model_path_dict = {
     "mixtral": "mistralai/Mixtral-8x7B-v0.1",
     "openchat-3.5": "openchat/openchat_3.5",
     "mistral-0.2":"mistralai/Mistral-7B-Instruct-v0.2",
-    "vicuna-1.5":"lmsys/vicuna-7b-v1.5",
+    "vicuna-1.5":"/data/cld/vicuna-7b-v1.5",
     "chatglm3":"THUDM/chatglm3-6b-32k",
 }
 
@@ -103,4 +103,7 @@ def gpt_4_predict(prompt):
 from langchain_google_genai import ChatGoogleGenerativeAI
 def gemini_predict(prompt):
     llm = ChatGoogleGenerativeAI(model="gemini-pro")
-    return llm.invoke(prompt)
+    return llm.invoke(prompt).content
+    # response=requests.post('http://127.0.0.1:40004/gemini/ans', json={'contents': [{"role":"user","parts":[{"text":prompt}]}],'name_key':os.environ['MY_KEY']}).json()
+    # ans=response['ans'][0]
+    return ans

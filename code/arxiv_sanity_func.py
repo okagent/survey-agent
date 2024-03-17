@@ -176,7 +176,7 @@ def _call_arxiv_sanity_search(uid, rank='time', tags='', pid='', time_filter='',
 
     return paper_titles
 
-def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
+def _arxiv_sanity_search(uid, search_query, search_type, time_filter,max_num=10,domain=''):
     # search_type: "by_keywords"表示按关键词搜索，"by_collections"表示按论文列表推荐
 
     # 基本就把arxiv-sanity-lite里serve.py的def main()里的代码拿过来就行了，或者直接调用它的main()
@@ -204,6 +204,7 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
         # 获取推荐论文的abstract
         target_paper_contents = [ {'content':_get_paper_content(paper_name, 'abstract'), 'source': paper_name} for paper_name in found_papers]
         target_paper = ''.join([str(i+1)+'. '+target_paper_contents[i]['source'].replace('\'','\\\'')+'\n'+target_paper_contents[i]['content'].replace('\'','\\\'')+'\n\n' for i in range(len(target_paper_contents))])
+        print("SANITY:\n"+"\n".join([target_paper_contents[i]['source'].replace('\'','\\\'') for i in range(len(target_paper_contents))])+"\n")
         # 让GPT-4过滤一遍推荐论文。如果GPT-4认为某篇论文不相关，就把它从found_papers里删掉。
         # sanity-check，要确保GPT-4推荐的论文名称和原名称一致。可以再用_get_papers_by_name对齐到原论文。
 
@@ -212,13 +213,16 @@ def _arxiv_sanity_search(uid, search_query, search_type, time_filter):
         # 130
         f = open(f"../prompts/filter_for_recommendation.txt", "r")
         filter = f.read()
-        prompt = filter.format(original_paper=source_paper, target_paper=target_paper)
-        # dissimilar = gpt_4_predict(prompt)
-        dissimilar = gemini_predict(prompt)
-        dissimilar = dissimilar[dissimilar.find('['):dissimilar.find(']')+1]
-        dissimilar = ast.literal_eval(dissimilar)
-        
-        found_papers = [paper for paper in found_papers if paper not in dissimilar]
+        prompt = filter.format(original_paper=source_paper, target_paper=target_paper,max_num=max_num,domain=domain)
+        # print(prompt)
+        similar = gpt_4_predict(prompt)
+        # similar = gemini_predict(prompt)
+        similar = similar[similar.find('['):similar.find(']')+1]
+        similar = ast.literal_eval(similar)
+        similar=[i[0] for i in sorted(similar,key=lambda x:-x[1])[:max_num]]
+        # similar=[i for i in similar[:max_num]]
+        # print(similar)
+        found_papers = similar
         
     # Define the search result as a paper collection
     
@@ -243,7 +247,7 @@ def search_papers(query: str, time_filter: str = '') -> str:
     """
     return json2string(_arxiv_sanity_search(uid, query, search_type="search", time_filter=time_filter))
 
-def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str:
+def recommend_similar_papers(collection_name: str, time_filter: str = '',max_num:int=10) -> str:
     """
     Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago. 
     Note that:
@@ -255,6 +259,7 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str
         uid (str): The user id.
         collection_name (str): The name of the paper collection based on which recommendations are to be made.
         time_filter (str, optional): Filter papers that were publised 'time_filter' days ago. Defaults to an empty string (no time filtering).
+        max_num (int, optional): Filter most relevant 'max_num' papers and return. Defaults to 10.
 
     Returns:
         str: If the collection is found, returns a JSON string representing recommended papers.
@@ -264,7 +269,7 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '') -> str
     if collection_name == COLLECTION_NOT_FOUND_INFO:
         return COLLECTION_NOT_FOUND_INFO
     else:
-        return json2string(_arxiv_sanity_search(uid, collection_name, search_type="recommend", time_filter=time_filter))
+        return json2string(_arxiv_sanity_search(uid, collection_name, search_type="recommend", time_filter=time_filter,max_num=max_num,domain=collection_name))
 
 if __name__ == '__main__':
     uid = 'test_user'  

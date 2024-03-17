@@ -1,0 +1,5 @@
+I am conducting research in the {domain_name} field. In this field, there are several key papers:
+```
+{init_paper_list}
+```
+Please recommend another {num} papers related to this field for me.

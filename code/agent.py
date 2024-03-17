@@ -332,15 +332,49 @@ agent_executor = initialize_agent(
 '''
 
 
+# if __name__ == "__main__":
+#     import datetime
+    
+#     query = input("Please enter your query: ")
+#     while 'stop' not in query.lower():
+#         try:
+#             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+#             # import pdb; pdb.set_trace()
+#             response, ans = run_agent(query) 
+#         finally:
+#             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+#         query = input("Please enter your query: ")
+        
 if __name__ == "__main__":
     import datetime
-    
-    query = input("Please enter your query: ")
-    while 'stop' not in query.lower():
+    from tqdm import tqdm
+    import pandas as pd
+    df=pd.read_json('../dataset_i3i5i9_51.json')
+    f = open(f"../prompts/test_recommend.txt", "r")
+    filter = f.read()
+    for idx,row in df.iterrows():
+        query=filter.format(domain_name=" 's ".join(row['catagory']), init_paper_list="\n".join(row['init_9']),num=10)
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
             # import pdb; pdb.set_trace()
-            response, ans = run_agent(query) 
+            response, ans = run_agent(query,idx,idx*1000) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-        query = input("Please enter your query: ")
+    # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+    # for idx,row in df.iterrows():
+    #     query=filter.format(domain_name=" 's ".join(row['catagory']), init_paper_list="\n".join(row['init_5']),num=10)
+    #     try:
+    #         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+    #         # import pdb; pdb.set_trace()
+    #         response, ans = run_agent(query,idx+100,idx*1000+100) 
+    #     finally:
+    #         print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+    # print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n")
+    # for idx,row in df.iterrows():
+    #     query=filter.format(domain_name=" 's ".join(row['catagory']), init_paper_list="\n".join(row['init_9']),num=10)
+    #     try:
+    #         print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+    #         # import pdb; pdb.set_trace()
+    #         response, ans = run_agent(query,idx+200,idx*1000+200) 
+    #     finally:
+    #         print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
