@@ -1,5 +1,5 @@
 {
-    "model_name": "mixtral",
-    "openai_apikey": "sk-",
+    "model_name": "",
+    "openai_apikey": "",
     "gemini_apikey": ""
 }
