@@ -1,5 +1,8 @@
 from utils import *
 
+import os
+os.environ["https_proxy"]="http://127.0.0.1:7890"
+os.environ["http_proxy"]="http://127.0.0.1:7890"
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema import HumanMessage
 from langchain.chat_models import ChatOpenAI
@@ -34,8 +37,10 @@ if model in model_path_dict:
 else:
     tokenizer = None
 
-def get_chunks(story, separator = ". ", chunk_size=3000):
-
+def get_chunks(story, separator = ". ", model_type="large", chunk_size=10000):
+    if "small" in model_type:
+        chunk_size=3000
+    # set chunk size =10000 for gpt4/gpt-3.5/gemini
     if model in model_path_dict.keys():
         text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
             tokenizer=tokenizer, chunk_size=chunk_size, chunk_overlap=200, separator=separator,
