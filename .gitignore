@@ -4,7 +4,7 @@ __pycache__
 *.ipynb
 secret_key.txt
 *.log
-config.json
+*.json
 data/
 .langchain.db
 output.txt
