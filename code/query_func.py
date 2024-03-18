@@ -13,7 +13,7 @@ uid = 'test_user'
 # 130
 ANSWER_FILE=f"{config['data_path']}/data/query_full_answer.json"
 
-def merge_chunk_responses(responses, question, model_type="small"):    
+def merge_chunk_responses(responses, question, model_type="large"):    
     
         # f = open(f"/data/survey_agent/prompts/merge_answer.txt", "r")
         # all_res = responses
@@ -57,7 +57,7 @@ def save_answer(query, full_response):
         json.dump(data, file)
     
     
-def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="abstract", model_type="small") -> str:
+def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="abstract", model_type="large") -> str:
     """
     Query a large collection of papers (based on their abstracts) to find an answer to a specific query. 
 
@@ -140,7 +140,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
 
     return answer_for_agent
 
-def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="small"):
+def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="large"):
     # import pdb; pdb.set_trace()
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
