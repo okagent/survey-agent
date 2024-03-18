@@ -39,7 +39,7 @@ def prettify_response(text):
         elif line.startswith("Observation:"):
             observation = line.split("Observation:")[1].strip()
             try:
-                observation = eval(observation)
+                observation = json.loads(eval(observation))
                 prettified_text += (
                     "<p style='color:#92400e'>Observation:</p>\n\n```json\n"
                     + json.dumps(observation, indent=4)
