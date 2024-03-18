@@ -37,7 +37,7 @@ from langchain.chains import LLMChain
 from langchain.prompts import StringPromptTemplate
 from langchain.schema import AgentAction, AgentFinish
 print("="*10 + f"准备开始 - 时间3: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_papers
+from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_from_papers
 print("="*10 + f"准备开始 - 时间4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from arxiv_sanity_func import search_papers, recommend_similar_papers
 print("="*10 + f"准备开始 - 时间5: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
@@ -83,7 +83,7 @@ tools = [
         callbacks=callbacks
     ),
     StructuredTool.from_function(
-        func=retrieve_papers,
+        func=retrieve_from_papers,
         description="Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. This function should be used when the query is about a specific statement, rather than being composed of keywords.",
         callbacks=callbacks
     ),
@@ -216,6 +216,9 @@ class CustomPromptTemplate(StringPromptTemplate):
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         kwargs["tool_using_example"] = tool_using_example
+
+        import pdb; pdb.set_trace()
+
         return self.template.format(**kwargs)
 
 prompt = CustomPromptTemplate(

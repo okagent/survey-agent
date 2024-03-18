@@ -332,7 +332,7 @@ def _retrieve_papers(query):
     else:
         return None
     
-def retrieve_papers(query: str) -> str:
+def retrieve_from_papers(query: str) -> str:
     """
     Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. This function should be used when the query is about a specific statement, rather than being composed of keywords.
 
