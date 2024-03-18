@@ -60,22 +60,24 @@ def generate(args: GenerateArgs):
         asyncio.set_event_loop(loop)
         question = args.messages[-1].content
 
-        generated_text, ans = run_agent(
-            question,
-            uid=args.conversationInfo.userId if args.conversationInfo else "test_user",
-            session_id=args.conversationInfo.conversationId
-            if args.conversationInfo
-            else None,
-        )
+        try:
+            generated_text, ans = run_agent(
+                question,
+                uid=args.conversationInfo.userId if args.conversationInfo else "test_user",
+                session_id=args.conversationInfo.conversationId
+                if args.conversationInfo
+                else None,
+            )
+            text = prettify_response(generated_text)
+        except Exception as e:
+            text = "Error: " + str(e)
         # fetch 'leave' if it exists @shiwei
         pass
-
-        prettified_text = prettify_response(generated_text)
 
         yield "data:" + json.dumps(
             {
                 "token": {"id": -1, "text": "", "special": False, "logprob": 0},
-                "generated_text": prettified_text,
+                "generated_text": text,
                 "details": None,
             }
         ) + "\n"
