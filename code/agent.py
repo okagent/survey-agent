@@ -7,8 +7,8 @@ from utils import config
 import os
 
 os.environ.update({"OPENAI_API_KEY": config["openai_apikey"],"GOOGLE_API_KEY": config["gemini_apikey"]})
-os.environ['http_proxy'] = "http://10.176.64.118:33333"
-os.environ['https_proxy'] = "http://10.176.64.118:33333"
+#os.environ['http_proxy'] = "http://10.176.64.118:33333"
+#os.environ['https_proxy'] = "http://10.176.64.118:33333"
 # import openai
 # openai.api_key = config["openai_apikey"]
 # print(os.environ["OPENAI_API_KEY"])
@@ -216,8 +216,6 @@ class CustomPromptTemplate(StringPromptTemplate):
         # Create a list of tool names for the tools provided
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         kwargs["tool_using_example"] = tool_using_example
-
-        import pdb; pdb.set_trace()
 
         return self.template.format(**kwargs)
 

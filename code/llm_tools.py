@@ -35,18 +35,18 @@ else:
     tokenizer = None
 
 def get_chunks(story, separator = ". ", chunk_size=3000):
-    if "gpt" in model:
-        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-            encoding_name="cl100k_base", chunk_size=chunk_size, chunk_overlap=200, separator=separator,
-        )
-    elif model in model_path_dict.keys():
+
+    if model in model_path_dict.keys():
         text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
             tokenizer=tokenizer, chunk_size=chunk_size, chunk_overlap=200, separator=separator,
         )
     else:
-        print(f"error: no tokenizer prepared for {model}")
+        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
+            encoding_name="cl100k_base", chunk_size=chunk_size, chunk_overlap=200, separator=separator,
+        )
     text_chunks = text_splitter.split_text(story)
     return text_chunks
+
 def num_tokens_from_string(string: str, encoding_name="cl100k_base") -> int:
     # """Returns the number of tokens in a text string."""
     num_tokens = len(tokenizer.encode(string))
@@ -118,7 +118,7 @@ def gemini_predict(prompt):
     #return llm.invoke(prompt)
 
     from utils import get_response_gemini
-    return get_response_gemini(sys_prompt='', user_prompt=prompt)
+    return get_response_gemini(sys_prompt='', inputs=prompt)
 
 
 if __name__ == '__main__':
