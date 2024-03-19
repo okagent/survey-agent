@@ -12,7 +12,7 @@ uid = 'test_user'
 # ANSWER_FILE="/data/survey_agent/query_full_answer.json"
 # 130
 ANSWER_FILE=f"{config['data_path']}/data/query_full_answer.json"
-
+model = config['model_name']
 def merge_chunk_responses(responses, question, model_type="large"):    
     
         # f = open(f"/data/survey_agent/prompts/merge_answer.txt", "r")
@@ -48,11 +48,10 @@ def save_answer(query, full_response):
     try:
         with open(ANSWER_FILE, 'r') as file:
             data = json.load(file)
-    except FileNotFoundError:
+    except:
         data = {}
     
     data.update(data_to_append)
-    
     with open(ANSWER_FILE, "w") as file:
         json.dump(data, file)
     
@@ -100,7 +99,10 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     else:
         res=[]
         for pp in prompts:
-            res.append(gemini_predict(pp))
+            if "gemini" in model:
+                res.append(gemini_predict(pp))
+            else:
+                res.append(gpt_4_predict(pp))
         
 
 
@@ -127,7 +129,10 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
         answers = []
         for mess in query_chunk_prompts:
             # answers.append(gpt_4_predict(mess))
-            answers.append(gemini_predict(mess))
+            if "gemini" in model:
+                answers.append(gemini_predict(mess))
+            else:
+                answers.append(gpt_4_predict(mess))
     
     answer_for_agent = []
     for i,j in zip(answers, answer_and_source):
@@ -194,7 +199,10 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
         res = small_model_predict([prompt])[0]
     else:
         # res = gpt_4_predict(prompt)
-        res = gemini_predict(prompt)
+        if "gemini" in model:
+            res = gemini_predict(prompt)
+        else:
+            res = gpt_4_predict(prompt)
         
     leave = {
         "answer": res,
@@ -263,6 +271,7 @@ if __name__ == '__main__':
 
     uid = 'test_user'   
     res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query='summarize these papers, write a latex survey in 1000 words', content_type='full')
+    # res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query="目前哪些方法能够做到zero-shot的role-playing？即，我只需要给一个新角色的prompt，它就能很好地扮演这个角色，不需要其他数据", content_type='full')
 
     #res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
     # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
