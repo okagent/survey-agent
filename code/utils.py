@@ -327,3 +327,6 @@ def get_response_json(post_processing_func=string2json, **kwargs):
 			
 
 	return json_response
+
+if __name__ == '__main__':
+	print(get_response_gpt('hi !', '1+1=?'))

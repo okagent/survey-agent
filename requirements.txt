@@ -1,0 +1,11 @@
+uvicorn
+langchain
+openai
+jsonlines
+tiktoken
+fastapi
+google-generativeai
+rank_bm25
+scikit-learn
+transformers
+langchain_google_genai

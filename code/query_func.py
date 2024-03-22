@@ -99,7 +99,6 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
         
     res = small_model_predict(prompts)
 
-
     #parse for references, answers
     answer_and_source=[]
     # 135

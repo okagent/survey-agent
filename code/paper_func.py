@@ -104,6 +104,8 @@ def _get_paper_content(paper_name, mode):
     if paper_name in paper_corpus.keys():
         if mode == 'full':
             return paper_corpus[paper_name]['full_text'] 
+        elif mode == 'intro':
+            return paper_corpus[paper_name]['introduction']
         else: # == 'abstract':
             return paper_corpus[paper_name]['abstract'] 
     else:

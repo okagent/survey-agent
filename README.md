@@ -4,7 +4,7 @@
 The server uses `uvicorn` to launch the agent server. Install `uvicorn` by running the following command
 
 ```bash
-pip install uvicorn
+pip install -r requirements.txt
 ```
 
 Run the following command to launch the agent server
