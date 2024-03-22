@@ -12,8 +12,8 @@ uid = 'test_user'
 # ANSWER_FILE="/data/survey_agent/query_full_answer.json"
 # 130
 ANSWER_FILE=f"{config['data_path']}/data/query_full_answer.json"
-
-def merge_chunk_responses(responses, question, model_type="small"):    
+model = config['model_name']
+def merge_chunk_responses(responses, question, model_type="large"):    
     
         # f = open(f"/data/survey_agent/prompts/merge_answer.txt", "r")
         # all_res = responses
@@ -48,16 +48,15 @@ def save_answer(query, full_response):
     try:
         with open(ANSWER_FILE, 'r') as file:
             data = json.load(file)
-    except FileNotFoundError:
+    except:
         data = {}
     
     data.update(data_to_append)
-    
     with open(ANSWER_FILE, "w") as file:
         json.dump(data, file)
     
     
-def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="abstract", model_type="small") -> str:
+def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="abstract", model_type="large") -> str:
     """
     Query a large collection of papers (based on their abstracts) to find an answer to a specific query. 
 
@@ -70,7 +69,6 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     Returns:
         str: A string representing a list of dictionaries containing the answer, the source paragraph, and the source paper.
     """
-
     paper_list_name = _get_papercollection_by_name(paper_list_name, uid)
     if paper_list_name == COLLECTION_NOT_FOUND_INFO:
         return COLLECTION_NOT_FOUND_INFO
@@ -96,8 +94,16 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     prompts=[]
     for d in chunk_list:
         prompts.append(check_for_related.format(title=d[0], content=d[1], question=question))
+    if "small" in model_type:    
+        res = small_model_predict(prompts)
+    else:
+        res=[]
+        for pp in prompts:
+            if "gemini" in model:
+                res.append(gemini_predict(pp))
+            else:
+                res.append(gpt_4_predict(pp))
         
-    res = small_model_predict(prompts)
 
     #parse for references, answers
     answer_and_source=[]
@@ -120,15 +126,18 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
         answers = small_model_predict(query_chunk_prompts)
     else:
         answers = []
-        for mess in prompts:
+        for mess in query_chunk_prompts:
             # answers.append(gpt_4_predict(mess))
-            answers.append(gemini_predict(mess))
+            if "gemini" in model:
+                answers.append(gemini_predict(mess))
+            else:
+                answers.append(gpt_4_predict(mess))
     
     answer_for_agent = []
     for i,j in zip(answers, answer_and_source):
         j['answer'] = i
         t = {}
-        t["source_paper"]=answer_and_source["source_paper"]
+        t["source_paper"]=j["source_paper"]
         t['answer']=i
         answer_for_agent.append(t)
     
@@ -139,7 +148,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
 
     return answer_for_agent
 
-def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="small"):
+def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="large"):
     # import pdb; pdb.set_trace()
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
@@ -189,7 +198,10 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
         res = small_model_predict([prompt])[0]
     else:
         # res = gpt_4_predict(prompt)
-        res = gemini_predict(prompt)
+        if "gemini" in model:
+            res = gemini_predict(prompt)
+        else:
+            res = gpt_4_predict(prompt)
         
     leave = {
         "answer": res,
@@ -201,7 +213,7 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
     #Save for UI
     save_answer(query, [leave])
     
-    return answer_for_agent
+    return answer_for_agent, res
 
 
 #Assume use on 130 or 135, you should connect to the huggingface
@@ -239,7 +251,10 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
         if chunk:
             res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
         else:
-            res = read_whole_papers(paper_list_name, query, uid, content_type, model_type)
+            res, res2 = read_whole_papers(paper_list_name, query, uid, content_type, model_type)
+            if res2==None:
+                print("read whole paper res is None, retry to read chunked papers...")
+                res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type) 
     except:
         print("try to read whole paper failed, retry to read chunked papers...")
         res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
@@ -255,6 +270,7 @@ if __name__ == '__main__':
 
     uid = 'test_user'   
     res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query='summarize these papers, write a latex survey in 1000 words', content_type='full')
+    # res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query="目前哪些方法能够做到zero-shot的role-playing？即，我只需要给一个新角色的prompt，它就能很好地扮演这个角色，不需要其他数据", content_type='full')
 
     #res = query_based_on_paper_collection(paper_list_name='persona', query='summarize these papers', uid=uid, content_type="full")
     # res = query_paper_collections(paper_list_name='123 asd Papers', query='summarize these papers', uid=uid, content_type="abstract")
