@@ -37,11 +37,11 @@ from langchain.chains import LLMChain
 from langchain.prompts import StringPromptTemplate
 from langchain.schema import AgentAction, AgentFinish
 print("="*10 + f"准备开始 - 时间3: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_from_papers
+from paper_func import get_papers_and_define_collections, get_papercollection_by_name, get_paper_content, get_paper_metadata, update_paper_collection, retrieve_from_papers, a_get_papers_and_define_collections, a_get_papercollection_by_name, a_get_paper_content, a_get_paper_metadata, a_update_paper_collection, a_retrieve_from_papers
 print("="*10 + f"准备开始 - 时间4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-from arxiv_sanity_func import search_papers, recommend_similar_papers
+from arxiv_sanity_func import search_papers, recommend_similar_papers, a_search_papers, a_recommend_similar_papers
 print("="*10 + f"准备开始 - 时间5: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-from query_func import query_based_on_paper_collection
+from query_func import query_based_on_paper_collection, a_query_based_on_paper_collection
 print("="*10 + f"准备开始 - 时间6: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 from langchain.tools import StructuredTool
 from langchain.callbacks import HumanApprovalCallbackHandler
@@ -54,6 +54,7 @@ callbacks = [] #[HumanApprovalCallbackHandler()]
 tools = [
     StructuredTool.from_function(
         func=get_papers_and_define_collections,
+        coroutine=a_get_papers_and_define_collections,
         description='''This function processes a list of paper titles, matches them with corresponding entries in the database, and defines a collection of papers under a specified name.
         Note that:
             1. If certain papers are not found, do not attempt to use the search_papers function again to look for those papers. 
@@ -63,46 +64,54 @@ tools = [
     ),
     StructuredTool.from_function(
         func=get_papercollection_by_name,
+        coroutine=a_get_papercollection_by_name,
         description='''Retrieve a specified paper collection by its name, display the paper collection's name and information of its papers. Only use this function when the user explicitly asks for information about the collection. Avoid using this when the user poses a request about the collection, in which case the agent should use 'query_based_on_paper_collection' instead.
         ''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=get_paper_content,
+        coroutine=a_get_paper_content,
         description="Retrieve the content of a paper. Set 'mode' as 'full' for the full paper, or 'abstract' for the abstract.",
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=get_paper_metadata,
+        coroutine=a_get_paper_metadata,
         description="Retrieve the metadata of a paper, including its title, authors, year and url.",
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=update_paper_collection,
+        coroutine=a_update_paper_collection,
         description='''Updates the target paper collection based on a specified action ('add' or 'del') and paper indices (Indices start from 0. The format should be comma-separated, with ranges indicated by a dash, e.g., "0, 2-4") from the source collection.''',
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=retrieve_from_papers,
+        coroutine=a_retrieve_from_papers,
         description="Retrieve the most relevant content in papers based on a given query, using the BM25 retrieval algorithm. Output the relevant paper and content. This function should be used when the query is about a specific statement, rather than being composed of keywords.",
         callbacks=callbacks
     ),
     StructuredTool.from_function(
         func=search_papers,
+        coroutine=a_search_papers,
         description='''Searches for papers based on a given query. Optionally filter papers that were published 'time_filter' days ago.
         The query should consist of keywords rather than a complete paper title. If the user's input seems like a paper title, the agent should use 'get_papers_and_define_collections'.''',
-        callbacks=callbacks
+        callbacks=callbacks,
     ), 
     StructuredTool.from_function(
         func=recommend_similar_papers,
+        coroutine=a_recommend_similar_papers,
         description='''Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago.
         Note that:
         1. Only use this function when the user explicitly asks for recommendation.
         ''',
-        callbacks=callbacks
+        callbacks=callbacks,
     ),
     StructuredTool.from_function(
         func=query_based_on_paper_collection,
+        coroutine=a_query_based_on_paper_collection,
         description="""
         When the user poses a question or request concerning a specific paper collection, the agent should use this action to generate the answer. This action includes the 'get_papercollection_by_name' function. Therefore, the agent should call this action directly instead of first invoking 'get_papercollection_by_name'.
         Note that:
@@ -260,7 +269,7 @@ output_parser = CustomOutputParser()
 from langchain.chat_models import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0)
+llm = ChatOpenAI(model_name="gpt-4-1106-preview", temperature=0, streaming=True)
 # llm = ChatGoogleGenerativeAI(model="gemini-pro")
 
 # Agent and agent executor
@@ -275,7 +284,7 @@ agent = LLMSingleActionAgent(
 )
 agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent, tools=tools, verbose=True, return_intermediate_steps=True
-)
+).with_config({"run_name": "Agent"})
 
 from utils import _sync_chat_history
 from langchain_core.messages import AIMessage, HumanMessage
@@ -288,22 +297,59 @@ sys.stdout = DualOutput('output.log')
 chat_history = []
 
 
-def run_agent(query, uid=None, session_id=None):
+async def run_agent(query, uid=None, session_id=None):
 
     
     chat_history = chat_history_dict.get((uid, session_id), [])
     
+    chunks = []
+    import pprint
     try:
-        output = agent_executor.invoke({"input": query, "chat_history": chat_history})
+        #output = agent_executor.invoke({"input": query, "chat_history": chat_history})
+
+        async for chunk in agent_executor.astream(
+            {"input": query, "chat_history": chat_history}
+        ):
+            chunks.append(chunk)
+            messages = chunk['messages']
+            if not len(message) == 1:
+                import pdb; pdb.set_trace()
+            message = messages 
+            is_action = 'actions' in chunk 
+            is_observation = 'steps' in chunk 
+
+            # print("------")
+            # pprint.pprint(chunk, depth=1)
+
+            if is_observation:
+                message = 'Observation:' + message
+            message += '\n\n'
+
+            yield message
+
+
+
+        
     except Exception as e:
         import traceback
         traceback.print_exc()
         print("Error: ", e)
-        return e, e
+        yield e
 
-    response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
+    #response = '\n\n'.join([ step_info[0].log + '\n\nObservation:' + str(step_info[1]) for step_info in output['intermediate_steps'] ] + [output['output']]) 
+
+    #  output['intermediate_steps'] = [(AgentAction(tool='retrieve_from_papers', tool_input='query: "large language models', log='Thought: The user has asked to find some papers about large language models using the "retrieve_from_papers" function. I will use this function with the query provided.\n\nAction: retrieve_from_papers\nAction Input: query: "large language models"'), <coroutine object retrieve_from_papers at 0x7f0c131ba2d0>), (AgentAction(tool='retrieve_from_papers', tool_input='query: "large language models', log='It seems there was an issue with the retrieval process. I will attempt the action again to see if it resolves the problem.\n\nAction: retrieve_from_papers\nAction Input: query: "large language models"'), <coroutine object retrieve_from_papers at 0x7f0c131b9e70>)]
+
+    '''
+    {'actions': [AgentAction(tool='search_papers', tool_input={'query': 'large language models'}, log='Thought: First, I need to check if there is already a collection on large language models. If not, I will use the search function to find related papers.\n\nAction: search_papers\nAction Input: {"query": "large language models"}')], 'messages': [AIMessage(content='Thought: First, I need to check if there is already a collection on large language models. If not, I will use the search function to find related papers.\n\nAction: search_papers\nAction Input: {"query": "large language models"}')]}
+
+
+    '''
+    import pdb
+    pdb.set_trace()
     ans = output['output'].split("Final Answer:")[-1].strip()
 
+    
     # relevant_info = ... @shiwei
     chat_history.extend(
         [
@@ -314,7 +360,7 @@ def run_agent(query, uid=None, session_id=None):
     chat_history_dict[(uid, session_id)] = chat_history
     _sync_chat_history(chat_history_dict)
 
-    return response, ans
+    #return response
 
 '''
 
@@ -334,14 +380,92 @@ agent_executor = initialize_agent(
 
 
 if __name__ == "__main__":
-    import datetime
+    # async def main():
+    #     import datetime
+    #     import random
+    #     session_id = str(random.randint(0, 100000))
+        
+    #     query = input("Please enter your query: ")
+    #     while 'stop' not in query.lower():
+    #         try:
+    #             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+    #             # import pdb; pdb.set_trace()
+    #             response = await run_agent(query, session_id=session_id) 
+    #             print(response)
+    #         finally:
+    #             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+            
+    #         query = input("Please enter your query: ")
+
+    def prettify_response(text):
+        prettified_text = ""
+        for line in text.split("\n"):
+            if line.startswith("Thought:"):
+                prettified_text += "<p style='color:#065f46'>" + line + "</p>"
+            elif line.startswith("Action:"):
+                prettified_text += "<p style='color:#b91c1c'>" + line + "</p>"
+            elif line.startswith("Action Input:"):
+                prettified_text += "<p style='color:#4338ca'>" + line + "</p>"
+            elif line.startswith("Observation:"):
+                observation = line.split("Observation:")[1].strip()
+                try:
+                    observation = json.loads(eval(observation))
+                    prettified_text += (
+                        "<p style='color:#92400e'>Observation:</p>\n\n```json\n"
+                        + json.dumps(observation, indent=4)
+                        + "\n```\n\n"
+                    )
+                except:
+                    prettified_text += "<p style='color:#92400e'>" + line + "</p>"
+            else:
+                prettified_text += line
+            prettified_text += "\n"
+        return prettified_text
+
+    import asyncio
+    # asyncio.run(main())
+    def my_generate(question):
+        def run_model():
+            print('run model')
+            import pdb; pdb.set_trace()
+            
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+ 
+
+            try:
+                generated_text = run_agent(
+                    question,
+                    uid="test_user",
+                    session_id=None
+                )
+                import pdb; pdb.set_trace()
+                text = prettify_response(generated_text)
+            except Exception as e:
+                text = "Error: " + str(e)
+            # fetch 'leave' if it exists @shiwei
+
+            yield "data:" + json.dumps(
+                {
+                    "token": {"id": -1, "text": "", "special": False, "logprob": 0},
+                    "generated_text": text,
+                    "details": None,
+                }
+            ) + "\n"
+        
+        xx = run_model()
+        import pdb; pdb.set_trace()
+        
+        return xx 
     
     query = input("Please enter your query: ")
     while 'stop' not in query.lower():
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
             # import pdb; pdb.set_trace()
-            response, ans = run_agent(query) 
+            response = my_generate(query) 
+            print(response)
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
+        
         query = input("Please enter your query: ")

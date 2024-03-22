@@ -16,7 +16,7 @@ uid = 'test_user'
 # 135
 # paper_pickle_path = '/data/survey_agent/paper_corpus.pkl' #os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
 # 130
-paper_pickle_path = f"{config['data_path']}/data/paper_corpus.pkl"
+paper_pickle_path = f"{config['data_path']}/data/paper_corpus_small.pkl"
 
 import json
 import time
@@ -36,7 +36,8 @@ def load_paper_pickle(paper_pickle_path):
     paper_corpus_json = []
     for filename in os.listdir(paper_corpus_path):
         file_path = os.path.join(paper_corpus_path, filename)
-        if filename.endswith('.json') and os.path.isfile(file_path):
+        #if filename.endswith('.json') and os.path.isfile(file_path):
+        if filename.endswith('_1.json') and os.path.isfile(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 try:
                     paper_corpus_json += json.load(file)
@@ -44,6 +45,8 @@ def load_paper_pickle(paper_pickle_path):
                     print(f"Error decoding JSON in file {filename}: {e}")
     standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
     paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
+    
+    
 
     paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
     for title, p in paper_corpus.items():
@@ -59,12 +62,15 @@ def load_paper_pickle(paper_pickle_path):
     # save paper_corpus, paper_docs and retriever into one pkl file
     with open(paper_pickle_path, 'wb') as f:
         pickle.dump([paper_corpus, paper_docs, retriever], f)
-        
+
+    return paper_corpus, paper_docs, retriever
+
+
 if not os.path.exists(paper_pickle_path):
     # 135
     # paper_corpus_path='/data/survey_agent/processed_data'
     # 130
-    load_paper_pickle(paper_pickle_path)
+    paper_corpus, paper_docs, retriever = load_paper_pickle(paper_pickle_path)
 
 else:
     # and load it, would it be quicker? 72s -> 27s, 2.7x faster
@@ -99,6 +105,9 @@ def get_papers_and_define_collections(paper_titles: List[str], paper_collection_
     _define_paper_collection(found_papers, paper_collection_name, uid)
     return _display_papers(found_papers, paper_collection_name, user_inputs=paper_titles)
 
+async def a_get_papers_and_define_collections(**kwargs):
+    return get_papers_and_define_collections(**kwargs)
+
 def _get_paper_content(paper_name, mode):
     """Get text content of a paper based on its exact name."""
     if paper_name in paper_corpus.keys():
@@ -110,6 +119,7 @@ def _get_paper_content(paper_name, mode):
             return paper_corpus[paper_name]['abstract'] 
     else:
         return PAPER_NOT_FOUND_INFO
+
 
 def get_paper_content(paper_name: str, mode: str) -> str:
     """
@@ -129,6 +139,9 @@ def get_paper_content(paper_name: str, mode: str) -> str:
         return _get_paper_content(paper_name, mode)
     else:
         return PAPER_NOT_FOUND_INFO
+
+async def a_get_paper_content(**kwargs):
+    return get_paper_content(**kwargs)
 
 def _get_paper_metadata(paper_name):
     """Get metadata of a paper based on its exact name."""
@@ -154,7 +167,9 @@ def get_paper_metadata(paper_name: str) -> str:
         return _get_paper_metadata(paper_name)
     else:
         return PAPER_NOT_FOUND_INFO 
-    
+
+async def a_get_paper_metadata(**kwargs):
+    return get_paper_metadata(**kwargs)
     
 def _get_papers_by_name(paper_titles):
     """Find corresponding papers based on a list of fuzzy paper names."""
@@ -271,7 +286,9 @@ def get_papercollection_by_name(collection_name: str) -> str:
     else:
         collection_papers = _get_collection_papers(paper_collection_name, uid)[:3]
         return _display_papers(collection_papers, paper_collection_name)
-    
+
+async def a_get_papercollection_by_name(**kwargs):
+    return get_papercollection_by_name(**kwargs)
 
 def update_paper_collection(target_collection_name: str, source_collection_name: str, paper_indexes: str, action: str) -> bool:
     """
@@ -331,6 +348,9 @@ def update_paper_collection(target_collection_name: str, source_collection_name:
     _sync_paper_collections(paper_collections)
     return True
 
+async def a_update_paper_collection(**kwargs):
+    return update_paper_collection(**kwargs)
+
 num_retrival = 3
 
 print("="*10 + f"准备开始 - 时间3.4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
@@ -363,6 +383,8 @@ def retrieve_from_papers(query: str) -> str:
     else:
         return RETRIEVE_NOTHING_INFO
 
+async def a_retrieve_from_papers(**kwargs):
+    return retrieve_from_papers(**kwargs)
 
 if __name__ == '__main__':
 

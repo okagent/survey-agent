@@ -61,7 +61,7 @@ def generate(args: GenerateArgs):
         question = args.messages[-1].content
 
         try:
-            generated_text, ans = run_agent(
+            generated_text = run_agent(
                 question,
                 uid=args.conversationInfo.userId if args.conversationInfo else "test_user",
                 session_id=args.conversationInfo.conversationId
@@ -72,7 +72,7 @@ def generate(args: GenerateArgs):
         except Exception as e:
             text = "Error: " + str(e)
         # fetch 'leave' if it exists @shiwei
-        pass
+
 
         yield "data:" + json.dumps(
             {

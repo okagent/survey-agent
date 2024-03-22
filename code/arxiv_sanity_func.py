@@ -247,6 +247,9 @@ def search_papers(query: str, time_filter: str = '') -> str:
     """
     return json2string(_arxiv_sanity_search(uid, query, search_type="search", time_filter=time_filter))
 
+async def a_search_papers(**kwargs):
+    return search_papers(**kwargs)
+
 def recommend_similar_papers(collection_name: str, time_filter: str = '',max_num:int=10) -> str:
     """
     Recommends papers similar to those in a specified collection. Optionally filter papers that were published 'time_filter' days ago. 
@@ -270,6 +273,9 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '',max_num
         return COLLECTION_NOT_FOUND_INFO
     else:
         return json2string(_arxiv_sanity_search(uid, collection_name, search_type="recommend", time_filter=time_filter,max_num=max_num,domain=collection_name))
+
+async def a_recommend_similar_papers(**kwargs):
+    return recommend_similar_papers(**kwargs)
 
 if __name__ == '__main__':
     uid = 'test_user'  

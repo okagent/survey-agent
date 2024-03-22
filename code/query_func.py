@@ -260,6 +260,9 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
         res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
     return res
 
+async def a_query_based_on_paper_collection(**kwargs):
+    return query_based_on_paper_collection(**kwargs)
+
 if __name__ == '__main__':
     # Set API key
     import os
