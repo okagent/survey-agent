@@ -9,3 +9,4 @@ rank_bm25
 scikit-learn
 transformers
 langchain_google_genai
+elasticsearch
