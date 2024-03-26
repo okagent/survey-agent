@@ -11,20 +11,6 @@ import numpy as np
 # DATA_DIR = '/data/survey_agent/'
 # 130
 
-paper_corpus_path= f"{config['data_path']}/data/raw_papers"#'/home/yxf/WIP/sva/pdf/extract_24_3_6'
-paper_corpus_json = []
-for filename in os.listdir(paper_corpus_path):
-    file_path = os.path.join(paper_corpus_path, filename)
-    if filename.endswith('.json') and os.path.isfile(file_path):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            try:
-                paper_corpus_json += json.load(file)
-            except json.JSONDecodeError as e:
-                print(f"Error decoding JSON in file {filename}: {e}")
-standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
-paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
-
-
 DATA_DIR = f"{config['data_path']}/data/"
 """
 our "feature store" is currently just a pickle file, may want to consider hdf5 in the future
@@ -45,6 +31,19 @@ def load_features():
 
 
 def compute_feature(num=20000, max_df=0.1, min_df=5, max_docs=-1):
+    paper_corpus_path= f"/data/cld/processed_data"#'/home/yxf/WIP/sva/pdf/extract_24_3_6'
+    paper_corpus_json = []
+    for filename in os.listdir(paper_corpus_path):
+        file_path = os.path.join(paper_corpus_path, filename)
+        if filename.endswith('.json') and os.path.isfile(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
+                try:
+                    paper_corpus_json += json.load(file)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON in file {filename}: {e}")
+    standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
+    paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
+
     v = TfidfVectorizer(input='content',
                         encoding='utf-8', decode_error='replace', strip_accents='unicode',
                         lowercase=True, analyzer='word', stop_words='english',

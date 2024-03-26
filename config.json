@@ -2,5 +2,6 @@
     "model_name": "",
     "openai_apikey": "",
     "gemini_apikey": "",
-    "data_path":".."
+    "data_path":"..",
+    "es_url":"http://10.176.64.118:11451"
 }

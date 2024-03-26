@@ -20,10 +20,10 @@ uid = 'test_user'
 import json
 from tqdm import tqdm
 import os
+from utils import config
 
 from elasticsearch import Elasticsearch
-es_url="http://10.176.64.118:11451"
-es = Elasticsearch(hosts=[es_url]).options(
+es = Elasticsearch(hosts=[config['es_url']]).options(
             request_timeout=20,
             retry_on_timeout=True,
             ignore_status=[400, 404]

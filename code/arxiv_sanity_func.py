@@ -22,35 +22,30 @@ print("="*10 + f"准备开始 - 时间4.1: {datetime.datetime.now().strftime('%Y
 
 # paper_meta = {k:{"_time": convert_to_timestamp(v["published_date"])} for k, v in paper_corpus.items()}
 from elasticsearch import Elasticsearch
-from datetime import datetime
 
-es = Elasticsearch()
+es = Elasticsearch(config['es_url'])
 
 # 初始化 scroll
 data = es.search(
     index="paper_corpus",
-    scroll='2m',  # 设置为2分钟
-    size=1000,  # 每次返回1000条数据
+    scroll='2m',
+    size=1000,
     body={
         "query": {
             "match_all": {}
         },
-        "_source": ["title", "published_date","authors","abstract"]  # 只返回 title 和 published_date 字段
+        "_source": ["title", "published_date","authors","abstract"]
     }
 )
 
-# 获取 scroll_id，用于下次请求
 scroll_id = data['_scroll_id']
 
-# 获取首批数据
 papers = data['hits']['hits']
 
-# 循环获取剩余的数据
 while len(data['hits']['hits']):
     data = es.scroll(scroll_id=scroll_id, scroll='2m')
     papers.extend(data['hits']['hits'])
 
-# 将数据转换为所需的格式
 paper_meta = {
     paper['_source']['title']: {
         "_time": convert_to_timestamp(paper['_source']['published_date']) if paper['_source']['published_date'] else None,
