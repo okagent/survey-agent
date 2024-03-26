@@ -327,8 +327,6 @@ async def run_agent(query, uid=None, session_id=None):
 
             yield message
 
-
-
         
     except Exception as e:
         import traceback
@@ -455,7 +453,7 @@ if __name__ == "__main__":
         
         xx = run_model()
         import pdb; pdb.set_trace()
-        
+
         return xx 
     
     query = input("Please enter your query: ")
