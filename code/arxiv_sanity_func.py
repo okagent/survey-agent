@@ -1,5 +1,5 @@
 import pickle
-from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_corpus, paper_collections, _get_collection_papers, _get_paper_content
+from paper_func import _define_paper_collection, _display_papers, _get_papercollection_by_name, COLLECTION_NOT_FOUND_INFO, paper_collections, _get_collection_papers, _get_paper_content
 from feature_func import load_features
 from utils import convert_to_timestamp, json2string, config
 from llm_tools import *
@@ -21,9 +21,43 @@ RET_NUM = 25
 print("="*10 + f"准备开始 - 时间4.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 # paper_meta = {k:{"_time": convert_to_timestamp(v["published_date"])} for k, v in paper_corpus.items()}
+from elasticsearch import Elasticsearch
+from datetime import datetime
+
+es = Elasticsearch()
+
+# 初始化 scroll
+data = es.search(
+    index="paper_corpus",
+    scroll='2m',  # 设置为2分钟
+    size=1000,  # 每次返回1000条数据
+    body={
+        "query": {
+            "match_all": {}
+        },
+        "_source": ["title", "published_date","authors","abstract"]  # 只返回 title 和 published_date 字段
+    }
+)
+
+# 获取 scroll_id，用于下次请求
+scroll_id = data['_scroll_id']
+
+# 获取首批数据
+papers = data['hits']['hits']
+
+# 循环获取剩余的数据
+while len(data['hits']['hits']):
+    data = es.scroll(scroll_id=scroll_id, scroll='2m')
+    papers.extend(data['hits']['hits'])
+
+# 将数据转换为所需的格式
 paper_meta = {
-    k: {"_time": convert_to_timestamp(v["published_date"]) if v["published_date"] != '' else None}
-    for k, v in paper_corpus.items()
+    paper['_source']['title']: {
+        "_time": convert_to_timestamp(paper['_source']['published_date']) if paper['_source']['published_date'] else None,
+        "authors":paper['_source']['authors'],
+        "abstract":paper['_source']['abstract']
+    }
+    for paper in papers
 }
 
 print("="*10 + f"准备开始 - 时间4.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
@@ -38,7 +72,7 @@ def search_rank(q: str = ''):
     matchu = lambda s: sum(int(s.lower().count(qp) > 0) for qp in qs)
     pairs = []
     
-    for pid, p in paper_corpus.items():
+    for pid, p in paper_meta.items():
         score = 0.0
         score += 10.0 * matchu(' '.join(p['authors']))
         score += 20.0 * matchu(p['title'])
