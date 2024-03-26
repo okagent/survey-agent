@@ -14,7 +14,8 @@ from sklearn import svm
 import datetime
 import string
 
-uid = 'test_user' 
+from utils import default_user
+uid = default_user
 
 RET_NUM = 25
 
@@ -272,7 +273,7 @@ def recommend_similar_papers(collection_name: str, time_filter: str = '',max_num
         return json2string(_arxiv_sanity_search(uid, collection_name, search_type="recommend", time_filter=time_filter,max_num=max_num,domain=collection_name))
 
 if __name__ == '__main__':
-    uid = 'test_user'  
+    uid = default_user 
 
     print('Recommend Papers: \n', recommend_similar_papers('Mathematical Reasoning'))
 

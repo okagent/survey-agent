@@ -37,6 +37,8 @@ console_handler = logging.StreamHandler()
 formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s [%(filename)s:%(lineno)d]')
 console_handler.setFormatter(formatter)
 
+default_user = 'test_user'
+
 import sys
 
 class DualOutput:
@@ -58,7 +60,7 @@ class DualOutput:
 
 
 def json2string(_json):
-    return json.dumps(_json, indent=4) 
+    return json.dumps(_json)#, indent=4) #f"""```json\n{json.dumps(_json, indent=4)}\n```"""
 
 # -----------------------------------------------------------------------------
 # utilities for safe writing of a pickle file

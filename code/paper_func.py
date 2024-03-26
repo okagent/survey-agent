@@ -1,6 +1,6 @@
 import difflib
 import random
-from utils import logger, json2string, config
+from utils import logger, json2string, config, default_user
 from typing import List
 import os
 import datetime
@@ -10,7 +10,7 @@ COLLECTION_NOT_FOUND_INFO = "Sorry, we cannot find the paper collection you are 
 RETRIEVE_NOTHING_INFO = "Sorry, we retrieve no relevant paper for your query."
 ERRORS = [PAPER_NOT_FOUND_INFO, COLLECTION_NOT_FOUND_INFO]
 
-uid = 'test_user' 
+uid = default_user
 
 # load paper_corpus.json
 # 135

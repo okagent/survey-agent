@@ -4,9 +4,9 @@ from llm_tools import *
 from paper_func import _get_collection_papers
 from paper_func import _get_papercollection_by_name
 from paper_func import _get_paper_content
-from utils import logger, json2string, config
+from utils import logger, json2string, config, default_user
 
-uid = 'test_user' 
+uid = default_user
 
 # 135
 # ANSWER_FILE="/data/survey_agent/query_full_answer.json"
@@ -99,10 +99,12 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     else:
         res=[]
         for pp in prompts:
-            if "gemini" in model:
-                res.append(gemini_predict(pp))
-            else:
-                res.append(gpt_4_predict(pp))
+            res.append(get_response('', pp, model))
+
+            # if "gemini" in model:
+            #     res.append(gemini_predict(pp))
+            # else:
+            #     res.append(get_response('', pp, model))
         
 
     #parse for references, answers
@@ -128,10 +130,11 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
         answers = []
         for mess in query_chunk_prompts:
             # answers.append(gpt_4_predict(mess))
-            if "gemini" in model:
-                answers.append(gemini_predict(mess))
-            else:
-                answers.append(gpt_4_predict(mess))
+            # if "gemini" in model:
+            #     answers.append(gemini_predict(mess))
+            # else:
+            #     answers.append(gpt_4_predict(mess))
+            answers.append(get_response('', mess, model))
     
     answer_for_agent = []
     for i,j in zip(answers, answer_and_source):
@@ -198,11 +201,21 @@ def read_whole_papers(paper_list_name, query, uid, content_type="abstract", mode
         res = small_model_predict([prompt])[0]
     else:
         # res = gpt_4_predict(prompt)
-        if "gemini" in model:
-            res = gemini_predict(prompt)
-        else:
-            res = gpt_4_predict(prompt)
-        
+        # if "gemini" in model:
+        #     res = gemini_predict(prompt)
+        # else:
+        #     res = gpt_4_predict(prompt)
+        res = get_response('', prompt, model)
+    
+    if res == '[TOKEN LIMIT]':
+        raise Exception("Token limit reached, please try to read chunked papers")
+    
+    try:
+        res_ = json.loads(res.replace("```json", '').replace("```", ''))
+        res = res_ 
+    except:
+        pass
+
     leave = {
         "answer": res,
         "source_paper": source_list,
@@ -252,8 +265,8 @@ def query_based_on_paper_collection(paper_list_name, query,  content_type, model
             res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type)
         else:
             res, res2 = read_whole_papers(paper_list_name, query, uid, content_type, model_type)
-            if res2==None:
-                print("read whole paper res is None, retry to read chunked papers...")
+            if res2 ==None:
+                print(f"read whole paper res is {res2}, retry to read chunked papers...")
                 res = read_chunked_papers(paper_list_name, query, uid, content_type, model_type) 
     except:
         print("try to read whole paper failed, retry to read chunked papers...")
@@ -268,7 +281,7 @@ if __name__ == '__main__':
     openai.api_key = config["openai_apikey"]
     print(os.environ["OPENAI_API_KEY"])
 
-    uid = 'test_user'   
+    uid = default_user  
     res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query='summarize these papers, write a latex survey in 1000 words', content_type='full')
     # res = query_based_on_paper_collection(paper_list_name='RolePlayingAI', query="目前哪些方法能够做到zero-shot的role-playing？即，我只需要给一个新角色的prompt，它就能很好地扮演这个角色，不需要其他数据", content_type='full')
 

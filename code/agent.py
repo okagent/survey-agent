@@ -1,7 +1,7 @@
 # Load config
 import datetime
 print("="*10 + f"准备开始 - 时间1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
-from utils import config
+from utils import config, default_user  
 
 # Set API key
 import os
@@ -242,7 +242,14 @@ class CustomOutputParser(AgentOutputParser):
         regex = r"Action: (.*?)[\n]*Action Input:[\s]*(.*)"
         match = re.search(regex, llm_output, re.DOTALL)
         if not match:
-            raise ValueError(f"Could not parse LLM output: `{llm_output}`")
+            #raise ValueError(f"Could not parse LLM output: `{llm_output}`")
+            print(f"Could not parse LLM output: `{llm_output}`")
+            return AgentFinish(
+                # Return values is generally always a dictionary with a single `output` key
+                # It is not recommended to try anything else at the moment :)
+                return_values={"output": llm_output}, #{"output": llm_output.split("Final Answer:")[-1].strip()},
+                log=llm_output,
+            )
         action = match.group(1).strip()
         action_input = match.group(2)
         # Return the action and action input
@@ -287,10 +294,30 @@ import sys
 sys.stdout = DualOutput('output.log')
 chat_history = []
 
+daily_use = {}
+daily_quota = 50
 
 def run_agent(query, uid=None, session_id=None):
 
+    if uid == default_user:
+        # ugly solution ...
+        from utils import get_response
+        return get_response('', query, model='gpt-3.5')
+
+    # check user quota 
+    from datetime import datetime
+    today = str(datetime.now()).split(' ')[0]
+
+    daily_use.setdefault(today, {})
+    daily_use[today].setdefault(uid, 0)
+
+    if daily_use[today][uid] > daily_quota:
+        return "You have exceeded the daily quota. Please come back tomorrow."
     
+    daily_use[today][uid] += 1
+
+    print(f'User: {uid}\tToday use: {daily_use[today][uid]}')
+
     chat_history = chat_history_dict.get((uid, session_id), [])
     
     try:
@@ -314,7 +341,7 @@ def run_agent(query, uid=None, session_id=None):
     chat_history_dict[(uid, session_id)] = chat_history
     _sync_chat_history(chat_history_dict)
 
-    return response, ans
+    return response
 
 '''
 
@@ -341,7 +368,7 @@ if __name__ == "__main__":
         try:
             print("="*10 + f"测试开始 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
             # import pdb; pdb.set_trace()
-            response, ans = run_agent(query) 
+            response = run_agent(query) 
         finally:
             print("\n\n\n" + "="*10 + f"测试结束 - 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
         query = input("Please enter your query: ")
