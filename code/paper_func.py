@@ -16,61 +16,80 @@ uid = default_user
 # 135
 # paper_pickle_path = '/data/survey_agent/paper_corpus.pkl' #os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data' , 'paper_corpus.pkl') 
 # 130
-paper_pickle_path = f"{config['data_path']}/data/paper_corpus.pkl"
+# paper_pickle_path = f"{config['data_path']}/data/paper_corpus.pkl"
 
 import json
-import time
-import pickle 
-from langchain.retrievers import BM25Retriever
-from langchain.schema import Document
-
-from langchain.docstore.document import Document
+from tqdm import tqdm
 import os
+from utils import config
 
-
-
+from elasticsearch import Elasticsearch
+es = Elasticsearch(hosts=[config['es_url']]).options(
+            request_timeout=20,
+            retry_on_timeout=True,
+            ignore_status=[400, 404]
+        )
 print("="*10 + f"准备开始 - 时间3.1: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
-def load_paper_pickle(paper_pickle_path):
-    paper_corpus_path= f"{config['data_path']}/data/raw_papers"#'/home/yxf/WIP/sva/pdf/extract_24_3_6'
-    paper_corpus_json = []
-    for filename in os.listdir(paper_corpus_path):
+from elasticsearch.helpers import bulk
+
+def create_es():
+    paper_corpus_path= f"/data/cld/processed_data"
+    standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
+
+    if es.indices.exists(index="paper_corpus"):
+        es.indices.delete(index="paper_corpus")
+    es.indices.create(index="paper_corpus")
+    if es.indices.exists(index="paper_docs"):
+        es.indices.delete(index="paper_docs")
+    es.indices.create(index="paper_docs")
+
+    actions_corpus = []
+    actions_docs = []
+
+    for filename in tqdm(os.listdir(paper_corpus_path)):
         file_path = os.path.join(paper_corpus_path, filename)
         if filename.endswith('.json') and os.path.isfile(file_path):
             with open(file_path, 'r', encoding='utf-8') as file:
                 try:
-                    paper_corpus_json += json.load(file)
+                    paper_corpus_json = json.load(file)
+                    
+                    for idx,item in enumerate(paper_corpus_json): 
+                        document={**{key: item[key] if key in item and item[key] is not None else "" for key in standard_keys},"paper_id":idx}
+                        actions_corpus.append({
+                            "_index": "paper_corpus",
+                            "_source": document
+                        })
+                        if len(actions_corpus)%10000==0:
+                            bulk(es, actions_corpus)
+                            actions_corpus = []
+                        page_content = document['full_text']
+                        page_content_pieces = [page_content[i:i+1000] for i in range(0, len(page_content), 1000)]
+                        for i, page_content_piece in enumerate(page_content_pieces):
+                            document_={"text":page_content_piece,'ith_piece': i,"paper_id":document['paper_id'],'title':document['title']}
+                            actions_docs.append({
+                                "_index": "paper_docs",
+                                "_source": document_
+                            })
+                            if len(actions_docs) % 10000 == 0:
+                                bulk(es, actions_docs)
+                                actions_docs = []
+            
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON in file {filename}: {e}")
-    standard_keys = ['authors','title','url','abstract','arxiv_id','published_date','year','source','institution','introduction','conclusion','full_text'] 
-    paper_corpus = { p['title']:{key: p[key] if key in p and p[key] is not None else "" for key in standard_keys} for p in paper_corpus_json }
 
-    paper_docs = [] #[ Document(page_content=p['full_text'], metadata={k:p[k] for k in ['title']})]
-    for title, p in paper_corpus.items():
-        page_content = p['full_text']
-        # 将p['full_text']划分为多个段落，每个段落1000个字符，naive
-        page_content_pieces = [page_content[i:i+1000] for i in range(0, len(page_content), 1000)]
-
-        paper_docs.extend([Document(page_content=page_content_piece, metadata={**{k:p[k] for k in ['title']}, **{'ith_piece': i}}) for i, page_content_piece in enumerate(page_content_pieces)])
-
-    retriever = BM25Retriever.from_documents(paper_docs)
+    # 插入剩余的文档
+    if actions_corpus:
+        bulk(es, actions_corpus)
+    if actions_docs:
+        bulk(es, actions_docs)
 
 
-    # save paper_corpus, paper_docs and retriever into one pkl file
-    with open(paper_pickle_path, 'wb') as f:
-        pickle.dump([paper_corpus, paper_docs, retriever], f)
-        
-if not os.path.exists(paper_pickle_path):
-    # 135
-    # paper_corpus_path='/data/survey_agent/processed_data'
-    # 130
-    load_paper_pickle(paper_pickle_path)
 
+if es.indices.exists(index="paper_docs") and es.indices.exists(index="paper_corpus"):
+    pass
 else:
-    # and load it, would it be quicker? 72s -> 27s, 2.7x faster
-    with open(paper_pickle_path, 'rb') as f:
-        # print('readin paper corpus')
-        paper_corpus, paper_docs, retriever = pickle.load(f)
+    create_es()
 
 print("="*10 + f"准备开始 - 时间3.2: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
@@ -101,15 +120,32 @@ def get_papers_and_define_collections(paper_titles: List[str], paper_collection_
 
 def _get_paper_content(paper_name, mode):
     """Get text content of a paper based on its exact name."""
-    if paper_name in paper_corpus.keys():
-        if mode == 'full':
-            return paper_corpus[paper_name]['full_text'] 
-        elif mode == 'intro':
-            return paper_corpus[paper_name]['introduction']
-        else: # == 'abstract':
-            return paper_corpus[paper_name]['abstract'] 
-    else:
+    # Query ES for the paper
+    query = {
+        "query": {
+            "term": {
+                "title.keyword": paper_name
+            }
+        }
+    }
+    response = es.search(index="paper_corpus", body=query)
+
+    # If no match is found
+    if response['hits']['total']['value'] == 0:
         return PAPER_NOT_FOUND_INFO
+
+    # Get the first matching paper
+    paper = response['hits']['hits'][0]['_source']
+
+    # Return the requested part of the paper
+    if mode == 'full':
+        return paper['full_text']
+    elif mode == 'intro':
+        return paper['introduction']
+    elif mode == 'meta':
+        return {key: paper[key] for key in ['title', 'authors', 'year', 'url']}
+    else: # == 'abstract':
+        return paper['abstract']
 
 def get_paper_content(paper_name: str, mode: str) -> str:
     """
@@ -132,10 +168,7 @@ def get_paper_content(paper_name: str, mode: str) -> str:
 
 def _get_paper_metadata(paper_name):
     """Get metadata of a paper based on its exact name."""
-    if paper_name in paper_corpus.keys():
-        return { key: paper_corpus[paper_name][key] for key in ['title', 'authors', 'year', 'url'] }
-    else:
-        return PAPER_NOT_FOUND_INFO
+    return _get_paper_content(paper_name,'meta')
 
 def get_paper_metadata(paper_name: str) -> str:
     """
@@ -156,18 +189,37 @@ def get_paper_metadata(paper_name: str) -> str:
         return PAPER_NOT_FOUND_INFO 
     
     
+import difflib
+
 def _get_papers_by_name(paper_titles):
     """Find corresponding papers based on a list of fuzzy paper names."""
     found_papers = []
     for fuzzy_name in paper_titles:
-        matches = difflib.get_close_matches(fuzzy_name, paper_corpus.keys(), n=1, cutoff=0.8)
-       
-        if matches:
-            found_papers.append(matches[0])
-        else:
+        # Query ES for the paper with a fuzzy match
+        query = {
+            "query": {
+                "match": {
+                    "title": fuzzy_name
+                }
+            }
+        }
+        response = es.search(index="paper_corpus", body=query)
+
+        # If no match is found
+        if response['hits']['total']['value'] == 0:
             found_papers.append(None)  # Append None if no matching paper is found
+        else:
+            # Get the first matching paper
+            paper = response['hits']['hits'][0]['_source']
+            title = paper['title']
+
+            # Use difflib to check if the match is close enough
+            if difflib.SequenceMatcher(None, fuzzy_name, title).ratio() >= 0.8:
+                found_papers.append(title)
+            else:
+                found_papers.append(None)
+
     # log relevant information
-    #found_papers = [p for p in found_papers if p]  # Remove None from the list
     logger.info(f"Found {len([p for p in found_papers if p])} papers out of {len(paper_titles)}")
     
     return found_papers
@@ -336,11 +388,20 @@ num_retrival = 3
 print("="*10 + f"准备开始 - 时间3.4: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" + "="*10 )
 
 def _retrieve_papers(query):
-    result = retriever.get_relevant_documents(query)
-    if len(result) > 0:
-        return result[:num_retrival]
-    else:
+    query = {
+        "query": {
+            "match": {
+                "text": query
+            }
+        }
+    }
+    response = es.search(index="paper_docs", body=query)
+    if response['hits']['total']['value'] == 0:
         return None
+    else:
+        hits = response['hits']['hits'][:num_retrival]
+        refs = [hit['_source'] for hit in hits]
+        return refs
     
 def retrieve_from_papers(query: str) -> str:
     """
@@ -355,7 +416,7 @@ def retrieve_from_papers(query: str) -> str:
     result = _retrieve_papers(query)
 
     if result:
-        found_papers = [p.metadata['title'] for p in result]
+        found_papers = [p['title'] for p in result]
         paper_collection_name = f'<BM25 results of query "{query}">'
         _define_paper_collection(found_papers, paper_collection_name, uid)
 
@@ -366,7 +427,7 @@ def retrieve_from_papers(query: str) -> str:
 
 if __name__ == '__main__':
 
-    print('retrieve_papers: ', retrieve_papers('''what is Numerical Question Answering?'''))
+    print('retrieve_papers: ', _retrieve_papers('''what is Numerical Question Answering?'''))
 
     
     print('get_papers_and_define_collections: ', get_papers_and_define_collections(paper_titles=["Semantic Relation Classification via Bidirectional LSTM Networks with Entity-aware Attention using", 'Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP', 'Does Role-Playing Chatbots Capture the Character Personalities? Assessing Personality Traits for Role-Playing'], paper_collection_name='Paper Collection 123'))
@@ -378,7 +439,4 @@ if __name__ == '__main__':
     print('_get_paper_content: ', _get_paper_content('Towards Robust Numerical Question Answering: Diagnosing Numerical Capabilities of NLP Systems', mode='abstract'))
 
     print('update_paper_collection ', update_paper_collection('123 asd Papers', 'Paper Collection 123', '1-2', 'del'))
-    
-
-
     

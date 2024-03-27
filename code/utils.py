@@ -243,6 +243,7 @@ def get_response_gpt(sys_prompt, inputs, model='gpt-4', retry_count=0, nth_gener
 			timeout=60
 		)
 
+
 		logger.info('GPT Output: ' + response.choices[0].message.content[:100])
 		return response.choices[0].message.content
 

@@ -152,7 +152,7 @@ def read_chunked_papers(paper_list_name: str, question: str, uid, content_type="
     return answer_for_agent
 
 def read_whole_papers(paper_list_name, query, uid, content_type="abstract", model_type="large"):
-    # import pdb; pdb.set_trace()
+
     """
     Queries a small collection of papers (based on their full text) to find an answer to a specific query.
 

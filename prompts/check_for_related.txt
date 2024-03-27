@@ -1,6 +1,7 @@
-Given Question: {question}
+Task: Please evaluate whether the provided content segment is useful for answering the user query. Answer with "Yes" if it is useful and "No" if it is not. When the query  pertains to generation, summarization or conducting a literature review, the response should always be "Yes".
+
+Given Query: {question}
 
 Content Segment from paper {title}:
 {content}
 
-Task: Please evaluate whether the provided content segment is useful for answering the given question. Answer with "Yes" if it is useful and "No" if it is not.

@@ -32,6 +32,9 @@ Need model tokenizer for calculating tokens of chunk or controlling
 
 ## set up arxiv-sanity
 
+### elastic_search
+配置elasticsearch数据库后，在config文件写入对应es_url。
+### arxiv_sanity
 先运行 feature_func.py 生成一下 tfidf 要用的 features.p，之后运行 arxiv_sanity_func.py 就可以
 
 ## set up config file

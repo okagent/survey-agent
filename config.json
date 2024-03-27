@@ -2,5 +2,6 @@
     "model_name": "gemini",
     "openai_apikey": "sk-",
     "gemini_apikey": "AI",
-    "data_path": "/home/survey_agent/"
+    "data_path": "/home/survey_agent/",
+    "es_url":"http://x.x.x.x:y"
 }
