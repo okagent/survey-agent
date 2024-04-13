@@ -51,7 +51,8 @@ paper_meta = {
     paper['_source']['title']: {
         "_time": convert_to_timestamp(paper['_source']['published_date']) if paper['_source']['published_date'] else None,
         "authors":paper['_source']['authors'],
-        "abstract":paper['_source']['abstract']
+        "abstract":paper['_source']['abstract'],
+        "title":paper['_source']['title']
     }
     for paper in papers
 }
